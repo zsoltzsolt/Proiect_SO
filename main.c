@@ -77,7 +77,11 @@ void verifyInputArguments(int argc, char **argv){
 
 }
 
-
+typedef struct rights{
+    char userRights[4];
+    char groupRights[4];
+    char othersRights[4];
+}rights;
 
 typedef struct imageData{
     char imageName[255];
@@ -85,6 +89,7 @@ typedef struct imageData{
     int width;
     int size;
     int links;
+    rights imageRights;
 }imageData;
 
 void writeImageStatistics(imageData data){
@@ -94,7 +99,9 @@ void writeImageStatistics(imageData data){
     printf("latime: %d\n", data.width);
     printf("dimensiune: %d octeti\n", data.size);
     printf("numar legaturi: %d\n", data.links);
-
+    printf("drepturi de accces user: %s\n", data.imageRights.userRights);
+    printf("drepturi de accces grup: %s\n", data.imageRights.groupRights);
+    printf("drepturi de accces altii: %s\n", data.imageRights.othersRights);
 }
 
 int getImageHeight(int imageDescriptor){
@@ -169,6 +176,60 @@ int getNumberOfLinks(int imageDescriptor){
 
 }
 
+char *getUserRights(int imageDescriptor){
+
+    static char rights[4];
+    struct stat imageData;
+
+    fstat(imageDescriptor, &imageData);
+
+    int mode = imageData.st_mode;
+
+    rights[0] = (S_IRUSR & mode) ? 'R' : '-';
+    rights[1] = (S_IWUSR & mode) ? 'W' : '-';
+    rights[2] = (S_IXUSR & mode) ? 'X' : '-';
+    rights[3] = '\0';
+
+    return rights;
+
+}
+
+char *getGroupRights(int imageDescriptor){
+
+    static char rights[4];
+    struct stat imageData;
+
+    fstat(imageDescriptor, &imageData);
+
+    int mode = imageData.st_mode;
+
+    rights[0] = (S_IRGRP & mode) ? 'R' : '-';
+    rights[1] = (S_IWGRP & mode) ? 'W' : '-';
+    rights[2] = (S_IXGRP & mode) ? 'X' : '-';
+    rights[3] = '\0';
+
+    return rights;
+
+}
+
+char *getOtherRights(int imageDescriptor){
+
+    static char rights[4];
+    struct stat imageData;
+
+    fstat(imageDescriptor, &imageData);
+
+    int mode = imageData.st_mode;
+
+    rights[0] = (S_IROTH & mode) ? 'R' : '-';
+    rights[1] = (S_IWOTH & mode) ? 'W' : '-';
+    rights[2] = (S_IXOTH & mode) ? 'X' : '-';
+    rights[3] = '\0';
+
+    return rights;
+
+}
+
 
 void getImageStatistics(char *imagePath){
 
@@ -184,6 +245,12 @@ void getImageStatistics(char *imagePath){
     data.size = getImageSize(image);
 
     data.links = getNumberOfLinks(image);
+
+    strcpy(data.imageRights.userRights, getUserRights(image));
+
+    strcpy(data.imageRights.groupRights, getGroupRights(image));
+
+    strcpy(data.imageRights.othersRights, getOtherRights(image));
 
     writeImageStatistics(data);
 
