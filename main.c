@@ -84,7 +84,7 @@ typedef struct imageData{
     int height;
     int width;
     int size;
-    int uid;
+    int links;
 }imageData;
 
 void writeImageStatistics(imageData data){
@@ -93,7 +93,7 @@ void writeImageStatistics(imageData data){
     printf("inaltime: %d\n", data.height);
     printf("latime: %d\n", data.width);
     printf("dimensiune: %d octeti\n", data.size);
-    printf("identificatorul utilizatorului: %d\n", data.uid);
+    printf("numar legaturi: %d\n", data.links);
 
 }
 
@@ -156,6 +156,20 @@ int getUserID(int imageDescriptor){
 }
 
 
+int getNumberOfLinks(int imageDescriptor){
+
+    int numberOfLinks;
+    struct stat imageData;
+
+    fstat(imageDescriptor, &imageData);
+
+    numberOfLinks = imageData.st_nlink;
+
+    return numberOfLinks;
+
+}
+
+
 void getImageStatistics(char *imagePath){
 
     imageData data;
@@ -169,7 +183,7 @@ void getImageStatistics(char *imagePath){
     
     data.size = getImageSize(image);
 
-    data.uid = getUserID(image);
+    data.links = getNumberOfLinks(image);
 
     writeImageStatistics(data);
 
