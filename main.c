@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <string.h>
+#include <unistd.h>
 
 int openFile(char *filePath){
 
@@ -15,6 +16,15 @@ int openFile(char *filePath){
     }
 
     return file;
+
+}
+
+void closeFile(int fileDescriptor){
+
+    if(close(fileDescriptor)){
+        perror("Eroare inchidere fisier");
+        exit(-1);
+    }
 
 }
 
@@ -44,6 +54,8 @@ int isBMPFile(char *filePath){
 
     fstat(fileDescriptor, &fileStat);
 
+    close(fileDescriptor);
+
     if(S_ISREG(fileStat.st_mode) && endsWithBMP(filePath))
         return 1;
 
@@ -65,10 +77,80 @@ void verifyInputArguments(int argc, char **argv){
 
 }
 
+
+
+typedef struct imageData{
+    char imageName[255];
+    int height;
+    int width;
+}imageData;
+
+void writeImageStatistics(imageData data){
+    
+    printf("nume fisier: %s\n", data.imageName);
+    printf("inaltime: %d\n", data.height);
+    printf("latime: %d\n", data.width);
+
+
+}
+
+int getImageHeight(int imageDescriptor){
+
+    int height;
+
+    lseek(imageDescriptor, 22, SEEK_SET);
+
+    if((read(imageDescriptor, &height, 4)) != 4){
+        perror("Error reading BMP image height");
+        exit(-1);
+    }
+
+    return height;
+
+}
+
+int getImageWidth(int imageDescriptor){
+
+    int width;
+
+    lseek(imageDescriptor, 18, SEEK_SET);
+
+    if((read(imageDescriptor, &width, 4)) != 4){
+        perror("Error reading BMP image width");
+        exit(-1);
+    }
+
+    return width;
+
+}
+
+
+void getImageStatistics(char *imagePath){
+
+    imageData data;
+    int image = openFile(imagePath);
+
+    strcpy(data.imageName, imagePath);
+
+    data.height = getImageHeight(image);
+
+    data.width = getImageWidth(image);
+    
+
+    writeImageStatistics(data);
+
+    closeFile(image);
+
+}
+
+
+
 int main(int argc, char **argv){
 
 
     verifyInputArguments(argc, argv);
+
+    getImageStatistics(argv[1]);
 
     return 0;
 }
