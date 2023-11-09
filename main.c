@@ -83,6 +83,8 @@ typedef struct imageData{
     char imageName[255];
     int height;
     int width;
+    int size;
+    int uid;
 }imageData;
 
 void writeImageStatistics(imageData data){
@@ -90,7 +92,8 @@ void writeImageStatistics(imageData data){
     printf("nume fisier: %s\n", data.imageName);
     printf("inaltime: %d\n", data.height);
     printf("latime: %d\n", data.width);
-
+    printf("dimensiune: %d octeti\n", data.size);
+    printf("identificatorul utilizatorului: %d\n", data.uid);
 
 }
 
@@ -124,6 +127,34 @@ int getImageWidth(int imageDescriptor){
 
 }
 
+int getImageSize(int imageDescriptor){
+
+    int size;
+
+    lseek(imageDescriptor, 2, SEEK_SET);
+
+    if((read(imageDescriptor, &size, 4)) != 4){
+        perror("Error reading BMP image width");
+        exit(-1);
+    }
+
+    return size;
+
+}
+
+int getUserID(int imageDescriptor){
+
+    int uid;
+    struct stat imageData;
+
+    fstat(imageDescriptor, &imageData);
+
+    uid = imageData.st_uid;
+
+    return uid;
+
+}
+
 
 void getImageStatistics(char *imagePath){
 
@@ -136,6 +167,9 @@ void getImageStatistics(char *imagePath){
 
     data.width = getImageWidth(image);
     
+    data.size = getImageSize(image);
+
+    data.uid = getUserID(image);
 
     writeImageStatistics(data);
 
