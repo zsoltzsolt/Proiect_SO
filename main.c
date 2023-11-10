@@ -7,7 +7,18 @@
 #include <unistd.h>
 #include <time.h>
 
+int createFile(char *filePath){
 
+    int file = 0;
+
+    if((file = open(filePath, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) < 0){
+        perror("Error while opening file");
+        exit(-1);
+    }
+
+    return file;
+
+}
 
 int openFile(char *filePath){
 
@@ -97,10 +108,13 @@ typedef struct imageData{
     rights imageRights;
 }imageData;
 
-void writeImageStatistics(imageData data){
+
+void writeImageStatistics(imageData data, int outputFile){
     
-    printf("nume fisier: %s\n", data.imageName);
-    printf("inaltime: %d\n", data.height);
+    char buffer[255];
+    
+    sprintf(buffer, "nume fisier: %s\n", data.imageName);
+    sprintf(buffer,"inaltime: %d\n", data.height);
     printf("latime: %d\n", data.width);
     printf("dimensiune: %d octeti\n", data.size);
     printf("numar legaturi: %d\n", data.links);
@@ -266,7 +280,7 @@ char *getOtherRights(int imageDescriptor){
 }
 
 
-void getImageStatistics(char *imagePath){
+void getImageStatistics(char *imagePath, int outputFile){
 
     imageData data;
     int image = openFile(imagePath);
@@ -291,7 +305,7 @@ void getImageStatistics(char *imagePath){
 
     data.date = getModificationDate(image);
 
-    writeImageStatistics(data);
+    writeImageStatistics(data, outputFile);
 
     closeFile(image);
 
@@ -304,7 +318,9 @@ int main(int argc, char **argv){
 
     verifyInputArguments(argc, argv);
 
-    getImageStatistics(argv[1]);
+    int outputFile = createFile(argv[1]);
+
+    getImageStatistics(argv[1], outputFile);
 
     return 0;
 }
