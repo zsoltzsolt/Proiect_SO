@@ -5,6 +5,9 @@
 #include <dirent.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
+
+
 
 int openFile(char *filePath){
 
@@ -88,6 +91,8 @@ typedef struct imageData{
     int height;
     int width;
     int size;
+    char *date;
+    int uid;
     int links;
     rights imageRights;
 }imageData;
@@ -99,6 +104,8 @@ void writeImageStatistics(imageData data){
     printf("latime: %d\n", data.width);
     printf("dimensiune: %d octeti\n", data.size);
     printf("numar legaturi: %d\n", data.links);
+    printf("identificatorul utilizatorului: %d\n", data.uid);
+    printf("timul ultimei modificari: %s\n", data.date);
     printf("drepturi de accces user: %s\n", data.imageRights.userRights);
     printf("drepturi de accces grup: %s\n", data.imageRights.groupRights);
     printf("drepturi de accces altii: %s\n", data.imageRights.othersRights);
@@ -173,6 +180,34 @@ int getNumberOfLinks(int imageDescriptor){
     numberOfLinks = imageData.st_nlink;
 
     return numberOfLinks;
+
+}
+
+int getUserId(int imageDescriptor){
+
+    int numberOfLinks;
+    struct stat imageData;
+
+    fstat(imageDescriptor, &imageData);
+
+    numberOfLinks = imageData.st_uid;
+
+    return numberOfLinks;
+
+}
+
+char *getModificationDate(int imageDescriptor){
+
+    static char modificationDate[256];
+    struct stat imageData;
+
+    fstat(imageDescriptor, &imageData);
+
+    struct tm *timeNow = localtime(&imageData.st_mtimespec.tv_sec);
+
+    strftime(modificationDate, 10, "%d.%m.%Y", timeNow);
+
+    return modificationDate;
 
 }
 
@@ -251,6 +286,10 @@ void getImageStatistics(char *imagePath){
     strcpy(data.imageRights.groupRights, getGroupRights(image));
 
     strcpy(data.imageRights.othersRights, getOtherRights(image));
+
+    data.uid = getUserID(image);
+
+    data.date = getModificationDate(image);
 
     writeImageStatistics(data);
 
