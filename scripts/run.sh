@@ -1,7 +1,7 @@
 
 MAIN_FILE="main.c"
-OTHER_FILES="bmp.c file.c imageStatistics.c"
-EXECUTABLE="program"
+OTHER_FILES="./src/bmp.c ./src/file.c ./src/imageStatistics.c"
+EXECUTABLE="./bin/program"
 
 gcc -Wall -o $EXECUTABLE $MAIN_FILE $OTHER_FILES
 

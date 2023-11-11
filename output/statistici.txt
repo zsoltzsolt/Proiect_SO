@@ -1,4 +1,4 @@
-nume fisier: imagine.bmp
+nume fisier: input/imagine.bmp
 inaltime: 1280
 latime: 1920
 dimensiune: 7372938 octeti

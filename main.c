@@ -6,9 +6,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include "bmp.h"
-#include "file.h"
-#include "imageStatistics.h"
+#include "./include/bmp.h"
+#include "./include/file.h"
+#include "./include/imageStatistics.h"
 
 void verifyInputArguments(int argc, char **argv){
 

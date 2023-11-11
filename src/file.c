@@ -1,10 +1,10 @@
-#include "file.h"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include "../include/file.h"
 
 int createFile(char *filePath){
 

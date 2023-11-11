@@ -1,10 +1,10 @@
-#include "bmp.h"
-#include "file.h"
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "../include/bmp.h"
+#include "../include/file.h"
 
 int endsWithBMP(char *name){
 

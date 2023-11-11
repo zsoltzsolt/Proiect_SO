@@ -1,8 +1,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "imageStatistics.h"
-#include "bmp.h"
+#include "../include/imageStatistics.h"
+#include "../include/bmp.h"
 
 void writeImageStatistics(imageData data, int outputFile){
     
