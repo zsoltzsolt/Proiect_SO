@@ -9,6 +9,7 @@
 #include "./include/bmp.h"
 #include "./include/file.h"
 #include "./include/imageStatistics.h"
+#include "./include/directory.h"
 
 
 void verifyInputArguments(int argc, char **argv){
@@ -18,8 +19,8 @@ void verifyInputArguments(int argc, char **argv){
         exit(-1);
     }
 
-    if(isBMPFile(argv[1]) == 0){
-        perror("Given argument is not a BMP file");
+    if(isDirectory(argv[1]) == 0){
+        perror("Given argument is not a directory");
         exit(-1);
     }
 
@@ -31,9 +32,9 @@ int main(int argc, char **argv){
 
     verifyInputArguments(argc, argv);
     
-    int outputFile = createFile("./output/statistici.txt");
+    //int outputFile = createFile("./output/statistici.txt");
 
-    getImageStatistics(argv[1], outputFile);
+    //getImageStatistics(argv[1], outputFile);
 
     return 0;
 }
