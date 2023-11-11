@@ -10,6 +10,7 @@
 #include "./include/file.h"
 #include "./include/imageStatistics.h"
 
+
 void verifyInputArguments(int argc, char **argv){
 
     if(argc != 2){
@@ -29,7 +30,7 @@ int main(int argc, char **argv){
 
 
     verifyInputArguments(argc, argv);
-
+    
     int outputFile = createFile("./output/statistici.txt");
 
     getImageStatistics(argv[1], outputFile);
