@@ -10,6 +10,7 @@
 #include "./include/file.h"
 #include "./include/imageStatistics.h"
 #include "./include/directory.h"
+#include "./include/links.h"
 #include <dirent.h>
 
 
@@ -40,7 +41,11 @@ void scanDirectory(char *directoryPath, int outputFile){
     while((directoryContent = readdir(directory)) != NULL){
         char path[255];
         sprintf(path, "%s/%s", directoryPath, directoryContent->d_name);
-        if(isBMPFile(path)){
+        if(isLink(path)){
+            getLinkStatistics(path, outputFile);
+            write(outputFile, newLine, 2);
+        }
+        else if(isBMPFile(path)){
             getImageStatistics(path, outputFile);
             write(outputFile, newLine, 2);
         }

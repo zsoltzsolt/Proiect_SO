@@ -17,6 +17,14 @@ drepturi de accces grup: R--
 drepturi de accces altii: R--
 
 
+nume legatura: input/image_link
+dimensiune legatura: 11
+dimensiune fisier: 7372938
+drepturi de accces user: RWX
+drepturi de accces grup: R-X
+drepturi de accces altii: R-X
+
+
 nume fisier: input/imagine.bmp
 inaltime: 1280
 latime: 1920
