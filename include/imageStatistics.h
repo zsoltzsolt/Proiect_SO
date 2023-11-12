@@ -13,8 +13,8 @@ typedef struct imageData{
     rights imageRights;
 }imageData;
 
-void writeImageStatistics(imageData data, int outputFile);
-void getImageStatistics(char *imagePath, int outputFile);
+void writeImageStatistics(imageData data, int outputFile, int isBMP);
+void getFileStatistics(char *imagePath, int outputFile, int isBMP);
 
 
 #endif

@@ -1,3 +1,23 @@
+nume fisier: input/fisier.txt
+dimensiune: 12 octeti
+numar legaturi: 501
+identificatorul utilizatorului: 501
+timul ultimei modificari: 12.11.2023
+drepturi de accces user: RW-
+drepturi de accces grup: R--
+drepturi de accces altii: R--
+
+
+nume fisier: input/z_fisier.txt
+dimensiune: 129 octeti
+numar legaturi: 501
+identificatorul utilizatorului: 501
+timul ultimei modificari: 12.11.2023
+drepturi de accces user: RW-
+drepturi de accces grup: R--
+drepturi de accces altii: R--
+
+
 nume director: input/folder2
 identificatorul utilizatorului: 501
 drepturi de access user: RWX

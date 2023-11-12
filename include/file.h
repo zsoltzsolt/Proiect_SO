@@ -13,9 +13,13 @@ int createFile(char *filePath);
 
 void closeFile(int fileDescriptor);
 
+int isFile(char *filePath);
+
 int getUserID(char *path);
 
 int getNumberOfLinks(char *path);
+
+int getSize(char *path);
 
 char *getModificationDate(char *path);
 

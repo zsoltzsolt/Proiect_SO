@@ -41,6 +41,19 @@ void closeFile(int fileDescriptor){
 
 }
 
+int isFile(char *filePath){
+
+    struct stat fileStat;
+
+    lstat(filePath, &fileStat);
+
+    if(S_ISREG(fileStat.st_mode))
+        return 1;
+
+    return 0;
+
+}
+
 int getUserID(char *path){
 
     int uid;
@@ -51,6 +64,19 @@ int getUserID(char *path){
     uid = imageData.st_uid;
 
     return uid;
+
+}
+
+int getSize(char *path){
+
+    int size;
+    struct stat imageData;
+
+    lstat(path, &imageData);
+
+    size = imageData.st_size;
+
+    return size;
 
 }
 

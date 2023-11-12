@@ -46,7 +46,11 @@ void scanDirectory(char *directoryPath, int outputFile){
             write(outputFile, newLine, 2);
         }
         else if(isBMPFile(path)){
-            getImageStatistics(path, outputFile);
+            getFileStatistics(path, outputFile, 1);
+            write(outputFile, newLine, 2);
+        }
+        else if(isFile(path)){
+            getFileStatistics(path, outputFile, 0);
             write(outputFile, newLine, 2);
         }
         else if(isDirectory(path)){

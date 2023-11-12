@@ -7,6 +7,4 @@ int getImageHeight(int imageDescriptor);
 
 int getImageWidth(int imageDescriptor);
 
-int getImageSize(int imageDescriptor);
-
 #endif
