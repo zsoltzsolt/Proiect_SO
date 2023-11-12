@@ -10,6 +10,8 @@
 #include "./include/file.h"
 #include "./include/imageStatistics.h"
 #include "./include/directory.h"
+#include "./include/links.h"
+#include <dirent.h>
 
 
 void verifyInputArguments(int argc, char **argv){
@@ -26,15 +28,50 @@ void verifyInputArguments(int argc, char **argv){
 
 }
 
+void scanDirectory(char *directoryPath, int outputFile){
+
+    struct dirent *directoryContent;
+
+    DIR *directory = openDirectory(directoryPath);
+    char newLine[] = "\n\n";
+
+    readdir(directory);
+    readdir(directory);
+
+    while((directoryContent = readdir(directory)) != NULL){
+        char path[255];
+        sprintf(path, "%s/%s", directoryPath, directoryContent->d_name);
+        if(isLink(path)){
+            getLinkStatistics(path, outputFile);
+            write(outputFile, newLine, 2);
+        }
+        else if(isBMPFile(path)){
+            getFileStatistics(path, outputFile, 1);
+            write(outputFile, newLine, 2);
+        }
+        else if(isFile(path)){
+            getFileStatistics(path, outputFile, 0);
+            write(outputFile, newLine, 2);
+        }
+        else if(isDirectory(path)){
+            getDirectoryStatistics(path, outputFile);
+            write(outputFile, newLine, 2);
+        }
+    }
+
+    closeDirectory(directory);
+
+}
+
 
 int main(int argc, char **argv){
 
 
     verifyInputArguments(argc, argv);
     
-    //int outputFile = createFile("./output/statistici.txt");
+    int outputFile = createFile("./output/statistici.txt");
 
-    //getImageStatistics(argv[1], outputFile);
+    scanDirectory(argv[1], outputFile);
 
     return 0;
 }

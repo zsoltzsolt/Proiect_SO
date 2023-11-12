@@ -13,17 +13,21 @@ int createFile(char *filePath);
 
 void closeFile(int fileDescriptor);
 
-int getUserID(int imageDescriptor);
+int isFile(char *filePath);
 
-int getNumberOfLinks(int imageDescriptor);
+int getUserID(char *path);
 
-char *getModificationDate(int imageDescriptor);
+int getNumberOfLinks(char *path);
 
-char *getUserRights(int imageDescriptor);
+int getSize(char *path);
 
-char *getGroupRights(int imageDescriptor);
+char *getModificationDate(char *path);
 
-char *getOtherRights(int imageDescriptor);
+char *getUserRights(char *path);
+
+char *getGroupRights(char *path);
+
+char *getOtherRights(char *path);
 
 
 #endif

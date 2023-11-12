@@ -71,17 +71,3 @@ int getImageWidth(int imageDescriptor){
 
 }
 
-int getImageSize(int imageDescriptor){
-
-    int size;
-
-    lseek(imageDescriptor, 2, SEEK_SET);
-
-    if((read(imageDescriptor, &size, 4)) != 4){
-        perror("Error reading BMP image width");
-        exit(-1);
-    }
-
-    return size;
-
-}

@@ -1,21 +1,24 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <dirent.h>
 #include "../include/imageStatistics.h"
 #include "../include/bmp.h"
 
-void writeImageStatistics(imageData data, int outputFile){
+void writeImageStatistics(imageData data, int outputFile, int isImage){
     
     char buffer[255];
 
     sprintf(buffer, "nume fisier: %s\n", data.imageName);
     write(outputFile, buffer, strlen(buffer));
 
-    sprintf(buffer, "inaltime: %d\n", data.height);
-    write(outputFile, buffer, strlen(buffer));
+    if(isImage){
+        sprintf(buffer, "inaltime: %d\n", data.height);
+        write(outputFile, buffer, strlen(buffer));
 
-    sprintf(buffer, "latime: %d\n", data.width);
-    write(outputFile, buffer, strlen(buffer));
+        sprintf(buffer, "latime: %d\n", data.width);
+        write(outputFile, buffer, strlen(buffer));
+    }
 
     sprintf(buffer, "dimensiune: %d octeti\n", data.size);
     write(outputFile, buffer, strlen(buffer));
@@ -42,33 +45,38 @@ void writeImageStatistics(imageData data, int outputFile){
 
 
 
-void getImageStatistics(char *imagePath, int outputFile){
+void getFileStatistics(char *imagePath, int outputFile, int isImage){
 
     imageData data;
     int image = openFile(imagePath);
 
     strcpy(data.imageName, imagePath);
-
-    data.height = getImageHeight(image);
-
-    data.width = getImageWidth(image);
     
-    data.size = getImageSize(image);
+    data.size = getSize(imagePath);
 
-    data.links = getNumberOfLinks(image);
+    if(isImage){
+        data.height = getImageHeight(image);
+        data.width = getImageWidth(image);
+    }
 
-    strcpy(data.imageRights.userRights, getUserRights(image));
+    data.links = getNumberOfLinks(imagePath);
 
-    strcpy(data.imageRights.groupRights, getGroupRights(image));
+    strcpy(data.imageRights.userRights, getUserRights(imagePath));
 
-    strcpy(data.imageRights.othersRights, getOtherRights(image));
+    strcpy(data.imageRights.groupRights, getGroupRights(imagePath));
 
-    data.uid = getUserID(image);
+    strcpy(data.imageRights.othersRights, getOtherRights(imagePath));
 
-    data.date = getModificationDate(image);
+    data.uid = getUserID(imagePath);
 
-    writeImageStatistics(data, outputFile);
+    data.date = getModificationDate(imagePath);
+
+    writeImageStatistics(data, outputFile, isImage);
 
     closeFile(image);
 
 }
+
+
+
+
