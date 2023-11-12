@@ -8,7 +8,6 @@
 #include <time.h>
 #include "./include/bmp.h"
 #include "./include/file.h"
-#include "./include/imageStatistics.h"
 #include "./include/directory.h"
 #include "./include/links.h"
 #include <dirent.h>
