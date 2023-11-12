@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <dirent.h>
 #include "../include/imageStatistics.h"
 #include "../include/bmp.h"
 
@@ -55,20 +56,22 @@ void getImageStatistics(char *imagePath, int outputFile){
     
     data.size = getImageSize(image);
 
-    data.links = getNumberOfLinks(image);
+    data.links = getNumberOfLinks(imagePath);
 
-    strcpy(data.imageRights.userRights, getUserRights(image));
+    strcpy(data.imageRights.userRights, getUserRights(imagePath));
 
-    strcpy(data.imageRights.groupRights, getGroupRights(image));
+    strcpy(data.imageRights.groupRights, getGroupRights(imagePath));
 
-    strcpy(data.imageRights.othersRights, getOtherRights(image));
+    strcpy(data.imageRights.othersRights, getOtherRights(imagePath));
 
-    data.uid = getUserID(image);
+    data.uid = getUserID(imagePath);
 
-    data.date = getModificationDate(image);
+    data.date = getModificationDate(imagePath);
 
     writeImageStatistics(data, outputFile);
 
     closeFile(image);
 
 }
+
+
