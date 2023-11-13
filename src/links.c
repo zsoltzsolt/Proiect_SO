@@ -4,20 +4,16 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "../include/links.h"
+#include "../include/file.h"
 
 int isLink(char *path){
 
-    struct stat fileStat;
-
-    if(lstat(path, &fileStat)){
-        perror("Error fetching file stat");
-        exit(-1);
-    }
+    struct stat fileStat = getFileStat(path);
 
     if(S_ISLNK(fileStat.st_mode))
         return 1;
-    return 0;
 
+    return 0;
 }
 
 void printLinkStatistics(linkData data, int outputFile){
@@ -50,8 +46,14 @@ void getLinkStatistics(char *linkPath, int outputFile){
     struct stat targetStat;
     linkData data;
 
-    lstat(linkPath, &linkStat);
-    stat(linkPath, &targetStat);
+    // linkStat coresponds to metadata about LINK
+    linkStat = getFileStat(linkPath);
+    
+    // targetStat cresponds to metadata about the ACTUAL file
+    if(stat(linkPath, &targetStat)){
+        perror("Error fetching file stat");
+        exit(-1);
+    }
 
     strcpy(data.linkName, linkPath);
 
@@ -59,14 +61,13 @@ void getLinkStatistics(char *linkPath, int outputFile){
 
     data.targetSize = targetStat.st_size;
 
-    strcpy(data.rights.userRights, getUserRights(linkPath));
+    strcpy(data.rights.userRights, getUserRights(linkStat));
 
-    strcpy(data.rights.groupRights, getGroupRights(linkPath));
+    strcpy(data.rights.groupRights, getGroupRights(linkStat));
 
-    strcpy(data.rights.othersRights, getOtherRights(linkPath));
+    strcpy(data.rights.othersRights, getOtherRights(linkStat));
 
     printLinkStatistics(data, outputFile);
-
 
 }
 

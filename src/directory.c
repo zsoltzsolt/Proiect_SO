@@ -70,17 +70,17 @@ void getDirectoryStatistics(char *directoryPath, int outputFile){
     struct stat fileStat;
     directoryData data;
 
-    lstat(directoryPath, &fileStat);
+    fileStat = getFileStat(directoryPath);
 
     strcpy(data.directoryName, directoryPath);
 
-    data.uid = getUserID(directoryPath);
+    data.uid = fileStat.st_uid;
 
-    strcpy(data.rights.userRights, getUserRights(directoryPath));
+    strcpy(data.rights.userRights, getUserRights(fileStat));
 
-    strcpy(data.rights.groupRights, getGroupRights(directoryPath));
+    strcpy(data.rights.groupRights, getGroupRights(fileStat));
 
-    strcpy(data.rights.othersRights, getOtherRights(directoryPath));
+    strcpy(data.rights.othersRights, getOtherRights(fileStat));
 
     printDirectoryStatistics(data, outputFile);
 

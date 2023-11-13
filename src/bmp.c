@@ -19,7 +19,6 @@ int endsWithBMP(char *name){
 
     extension[4] = '\0';
 
-
     return !strcmp(extension, ".bmp");
  
 
@@ -27,12 +26,7 @@ int endsWithBMP(char *name){
 
 int isBMPFile(char *filePath){
 
-    int fileDescriptor = openFile(filePath);
-    struct stat fileStat;
-
-    fstat(fileDescriptor, &fileStat);
-
-    close(fileDescriptor);
+    struct stat fileStat = getFileStat(filePath);
 
     if(S_ISREG(fileStat.st_mode) && endsWithBMP(filePath))
         return 1;

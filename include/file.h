@@ -29,19 +29,15 @@ void closeFile(int fileDescriptor);
 
 int isFile(char *filePath);
 
-int getUserID(char *path);
+char *getModificationDate(struct stat fileStat);
 
-int getNumberOfLinks(char *path);
+char *getUserRights(struct stat fileStat);
 
-int getSize(char *path);
+char *getGroupRights(struct stat fileStat);
 
-char *getModificationDate(char *path);
+char *getOtherRights(struct stat fileStat);
 
-char *getUserRights(char *path);
-
-char *getGroupRights(char *path);
-
-char *getOtherRights(char *path);
+struct stat getFileStat(char *path);
 
 
 #endif
