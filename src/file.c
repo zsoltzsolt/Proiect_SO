@@ -56,69 +56,38 @@ int isFile(char *filePath){
 
 }
 
-int getUserID(char *path){
+struct stat getFileStat(char *path){
 
-    int uid;
-    struct stat imageData;
+    struct stat fileStat;
 
-    lstat(path, &imageData);
+    if(lstat(path, &fileStat)){
+        perror("Error fetching file stat");
+        exit(-1);
+    }
 
-    uid = imageData.st_uid;
-
-    return uid;
-
-}
-
-int getSize(char *path){
-
-    int size;
-    struct stat imageData;
-
-    lstat(path, &imageData);
-
-    size = imageData.st_size;
-
-    return size;
+    return fileStat;
 
 }
 
 
-int getNumberOfLinks(char *path){
-
-    int numberOfLinks;
-    struct stat imageData;
-
-    lstat(path, &imageData);
-
-    numberOfLinks = imageData.st_uid;
-
-    return numberOfLinks;
-
-}
-
-char *getModificationDate(char *path){
+char *getModificationDate(struct stat fileStat){
 
     static char modificationDate[256];
-    struct stat imageData;
 
-    lstat(path, &imageData);
+    struct tm *timeNow = localtime(&fileStat.st_mtimespec.tv_sec);
 
-    struct tm *timeNow = localtime(&imageData.st_mtimespec.tv_sec);
-
+    // We convert modification date to dd/mm/yyyy format
     strftime(modificationDate, 10, "%d.%m.%Y", timeNow);
 
     return modificationDate;
 
 }
 
-char *getUserRights(char *path){
+char *getUserRights(struct stat fileStat){
 
     static char rights[4];
-    struct stat imageData;
 
-    lstat(path, &imageData);
-
-    int mode = imageData.st_mode;
+    int mode = fileStat.st_mode;
 
     rights[0] = (S_IRUSR & mode) ? 'R' : '-';
     rights[1] = (S_IWUSR & mode) ? 'W' : '-';
@@ -129,14 +98,11 @@ char *getUserRights(char *path){
 
 }
 
-char *getGroupRights(char *path){
+char *getGroupRights(struct stat fileStat){
 
     static char rights[4];
-    struct stat imageData;
 
-    lstat(path, &imageData);
-
-    int mode = imageData.st_mode;
+    int mode = fileStat.st_mode;
 
     rights[0] = (S_IRGRP & mode) ? 'R' : '-';
     rights[1] = (S_IWGRP & mode) ? 'W' : '-';
@@ -147,14 +113,11 @@ char *getGroupRights(char *path){
 
 }
 
-char *getOtherRights(char *path){
+char *getOtherRights(struct stat fileStat){
 
     static char rights[4];
-    struct stat imageData;
 
-    lstat(path, &imageData);
-
-    int mode = imageData.st_mode;
+    int mode = fileStat.st_mode;
 
     rights[0] = (S_IROTH & mode) ? 'R' : '-';
     rights[1] = (S_IWOTH & mode) ? 'W' : '-';
@@ -165,6 +128,8 @@ char *getOtherRights(char *path){
 
 }
 
+
+
 void writeFileStatistics(imageData data, int outputFile, int isImage){
     
     char buffer[255];
@@ -172,6 +137,7 @@ void writeFileStatistics(imageData data, int outputFile, int isImage){
     sprintf(buffer, "nume fisier: %s\n", data.imageName);
     write(outputFile, buffer, strlen(buffer));
 
+    // Image height and width is displayed only for bmp images
     if(isImage){
         sprintf(buffer, "inaltime: %d\n", data.height);
         write(outputFile, buffer, strlen(buffer));
@@ -189,7 +155,7 @@ void writeFileStatistics(imageData data, int outputFile, int isImage){
     sprintf(buffer, "identificatorul utilizatorului: %d\n", data.uid);
     write(outputFile, buffer, strlen(buffer));
 
-    sprintf(buffer, "timul ultimei modificari: %s\n", data.date);
+    sprintf(buffer, "timpul ultimei modificari: %s\n", data.date);
     write(outputFile, buffer, strlen(buffer));
 
     sprintf(buffer, "drepturi de accces user: %s\n", data.imageRights.userRights);
@@ -207,29 +173,31 @@ void writeFileStatistics(imageData data, int outputFile, int isImage){
 
 void getFileStatistics(char *imagePath, int outputFile, int isImage){
 
+    struct stat fileStat = getFileStat(imagePath);
     imageData data;
     int image = openFile(imagePath);
 
     strcpy(data.imageName, imagePath);
     
-    data.size = getSize(imagePath);
+    data.size = fileStat.st_size;
 
+    // if it is an image we set height and width
     if(isImage){
         data.height = getImageHeight(image);
         data.width = getImageWidth(image);
     }
 
-    data.links = getNumberOfLinks(imagePath);
+    data.links = fileStat.st_nlink;
 
-    strcpy(data.imageRights.userRights, getUserRights(imagePath));
+    strcpy(data.imageRights.userRights, getUserRights(fileStat));
 
-    strcpy(data.imageRights.groupRights, getGroupRights(imagePath));
+    strcpy(data.imageRights.groupRights, getGroupRights(fileStat));
 
-    strcpy(data.imageRights.othersRights, getOtherRights(imagePath));
+    strcpy(data.imageRights.othersRights, getOtherRights(fileStat));
 
-    data.uid = getUserID(imagePath);
+    data.uid = fileStat.st_uid;
 
-    data.date = getModificationDate(imagePath);
+    data.date = getModificationDate(fileStat);
 
     writeFileStatistics(data, outputFile, isImage);
 
