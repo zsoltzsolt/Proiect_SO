@@ -2,7 +2,7 @@ nume fisier: input/fisier.txt
 dimensiune: 12 octeti
 numar legaturi: 1
 identificatorul utilizatorului: 501
-timul ultimei modificari: 13.11.2023
+timpul ultimei modificari: 13.11.2023
 drepturi de accces user: RW-
 drepturi de accces grup: R--
 drepturi de accces altii: R--
@@ -12,7 +12,7 @@ nume fisier: input/z_fisier.txt
 dimensiune: 129 octeti
 numar legaturi: 1
 identificatorul utilizatorului: 501
-timul ultimei modificari: 13.11.2023
+timpul ultimei modificari: 13.11.2023
 drepturi de accces user: RW-
 drepturi de accces grup: R--
 drepturi de accces altii: R--
@@ -24,7 +24,7 @@ latime: 1920
 dimensiune: 7372938 octeti
 numar legaturi: 1
 identificatorul utilizatorului: 501
-timul ultimei modificari: 13.11.2023
+timpul ultimei modificari: 15.11.2023
 drepturi de accces user: RW-
 drepturi de accces grup: R--
 drepturi de accces altii: R--
@@ -44,7 +44,7 @@ latime: 1920
 dimensiune: 7372938 octeti
 numar legaturi: 1
 identificatorul utilizatorului: 501
-timul ultimei modificari: 13.11.2023
+timpul ultimei modificari: 15.11.2023
 drepturi de accces user: RW-
 drepturi de accces grup: R--
 drepturi de accces altii: R--
