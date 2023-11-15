@@ -7,4 +7,6 @@ int getImageHeight(int imageDescriptor);
 
 int getImageWidth(int imageDescriptor);
 
+void transformToGrayscale(char *imagePath);
+
 #endif

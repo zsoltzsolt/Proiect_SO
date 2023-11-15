@@ -11,9 +11,11 @@ int endsWithBMP(char *name){
     char extension[5];
     int lenght = strlen(name);
 
+    // If length is smaller than 4 it can't be a valid bmp file (min 4 chars .bmp)
     if(lenght < 4)
         return 0;
 
+    // We extract last 4 characters
     for(int i = 0 ; i < 4; ++i)
         extension[i] = name[lenght - 4 + i];
 
@@ -21,7 +23,6 @@ int endsWithBMP(char *name){
 
     return !strcmp(extension, ".bmp");
  
-
 }
 
 int isBMPFile(char *filePath){
@@ -62,6 +63,50 @@ int getImageWidth(int imageDescriptor){
     }
 
     return width;
+
+}
+
+int getPixel(int imageDescriptor){
+    
+    int value;
+
+    if((read(imageDescriptor, &value, 1)) != 1){
+            perror("Error reading pixel value");
+            exit(-1);
+        }
+
+    return value;
+
+}
+
+void transformToGrayscale(char *imagePath){
+
+    int imageDescriptor = openFile(imagePath);
+    int red, green, blue;
+    int height;
+    int width;
+
+    height = getImageHeight(imageDescriptor);
+    width = getImageWidth(imageDescriptor);
+    
+    lseek(imageDescriptor, 54, SEEK_SET);
+    int i;
+    for(i = 0; i < height*width; ++i){
+        red = getPixel(imageDescriptor);
+        green = getPixel(imageDescriptor);
+        blue = getPixel(imageDescriptor);
+
+        int new_v = 0.3*red + 0.6*green + 0.1*blue;
+
+        lseek(imageDescriptor, -3, SEEK_CUR);
+
+        write(imageDescriptor, &new_v, 1);
+        write(imageDescriptor, &new_v, 1);
+        write(imageDescriptor, &new_v, 1);
+
+    }
+
+    closeFile(imageDescriptor);
 
 }
 

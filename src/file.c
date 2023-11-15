@@ -25,7 +25,7 @@ int openFile(char *filePath){
 
     int file = 0;
 
-    if((file = open(filePath, O_RDONLY)) < 0){
+    if((file = open(filePath, O_RDWR)) < 0){
         perror("Error while opening file");
         exit(-1);
     }
