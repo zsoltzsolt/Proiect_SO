@@ -12,6 +12,7 @@
 #include "./include/links.h"
 #include <dirent.h>
 
+#define MAX_PROCESS_NUM 255
 
 void verifyInputArguments(int argc, char **argv){
 
@@ -33,6 +34,9 @@ void scanDirectory(char *directoryPath, int outputFile){
 
     DIR *directory = openDirectory(directoryPath);
     char newLine[] = "\n\n";
+    pid_t pids[MAX_PROCESS_NUM], wpid;
+    int status;
+    int i = 0;
 
     readdir(directory);
     readdir(directory);
@@ -40,24 +44,39 @@ void scanDirectory(char *directoryPath, int outputFile){
     while((directoryContent = readdir(directory)) != NULL){
         char path[255];
         sprintf(path, "%s/%s", directoryPath, directoryContent->d_name);
-        if(isLink(path)){
-            getLinkStatistics(path, outputFile);
-            write(outputFile, newLine, 2);
+
+        if((pids[i] = fork()) < 0){
+            perror("Error\n");
+            exit(1);
         }
-        else if(isBMPFile(path)){
-            printf("here");
-            transformToGrayscale(path);
-            getFileStatistics(path, outputFile, 1);
-            write(outputFile, newLine, 2);
+        else if(pids[i] == 0){
+            if(isLink(path)){
+                getLinkStatistics(path, outputFile);
+                write(outputFile, newLine, 2);
+            }
+            else if(isBMPFile(path)){
+                transformToGrayscale(path);
+                getFileStatistics(path, outputFile, 1);
+                write(outputFile, newLine, 2);
+            }
+            else if(isFile(path)){
+                getFileStatistics(path, outputFile, 0);
+                write(outputFile, newLine, 2);
+            }
+            else if(isDirectory(path)){
+                getDirectoryStatistics(path, outputFile);
+                write(outputFile, newLine, 2);
+            }
+            exit(i);
         }
-        else if(isFile(path)){
-            getFileStatistics(path, outputFile, 0);
-            write(outputFile, newLine, 2);
-        }
-        else if(isDirectory(path)){
-            getDirectoryStatistics(path, outputFile);
-            write(outputFile, newLine, 2);
-        }
+
+        ++i;
+    }
+
+    for(int j = 0; j < i; ++j){
+        wpid = wait(&status);
+        if(WIFEXITED(status))
+            printf("S-a incheiat procesul cu PID-ul %d si codul %d\n", wpid, WEXITSTATUS(status));
     }
 
     closeDirectory(directory);

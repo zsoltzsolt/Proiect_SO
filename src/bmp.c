@@ -68,19 +68,6 @@ int getImageWidth(int imageDescriptor){
 
 }
 
-int getPixel(int imageDescriptor){
-    
-    int value;
-
-    if((read(imageDescriptor, &value, 1)) != 1){
-            perror("Error reading pixel value");
-            exit(-1);
-        }
-
-    return value;
-
-}
-
 void transformToGrayscale(char *imagePath){
 
     int imageDescriptor = openFile(imagePath);
