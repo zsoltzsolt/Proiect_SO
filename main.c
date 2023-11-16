@@ -28,7 +28,7 @@ void verifyInputArguments(int argc, char **argv){
 
 }
 
-void scanDirectory(char *directoryPath, int outputFile){
+void scanDirectory(char *directoryPath){
 
     struct dirent *directoryContent;
 
@@ -50,6 +50,10 @@ void scanDirectory(char *directoryPath, int outputFile){
             exit(1);
         }
         else if(pids[i] == 0){
+            char fileName[255];
+            sprintf(fileName, "%s_%s",directoryContent->d_name, "statistica.txt");
+            int outputFile = createFile(fileName);
+
             if(isLink(path)){
                 getLinkStatistics(path, outputFile);
                 write(outputFile, newLine, 2);
@@ -67,6 +71,7 @@ void scanDirectory(char *directoryPath, int outputFile){
                 getDirectoryStatistics(path, outputFile);
                 write(outputFile, newLine, 2);
             }
+            close(outputFile);
             exit(i);
         }
 
@@ -89,9 +94,8 @@ int main(int argc, char **argv){
 
     verifyInputArguments(argc, argv);
     
-    int outputFile = createFile("./output/statistici.txt");
 
-    scanDirectory(argv[1], outputFile);
+    scanDirectory(argv[1]);
 
     return 0;
 }
