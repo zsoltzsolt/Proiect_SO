@@ -45,6 +45,8 @@ void scanDirectory(char *directoryPath, int outputFile){
             write(outputFile, newLine, 2);
         }
         else if(isBMPFile(path)){
+            printf("here");
+            transformToGrayscale(path);
             getFileStatistics(path, outputFile, 1);
             write(outputFile, newLine, 2);
         }
