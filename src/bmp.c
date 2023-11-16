@@ -6,6 +6,8 @@
 #include "../include/bmp.h"
 #include "../include/file.h"
 
+#define BUFFER_SIZE 1200
+
 int endsWithBMP(char *name){
 
     char extension[5];
@@ -83,26 +85,42 @@ void transformToGrayscale(char *imagePath){
 
     int imageDescriptor = openFile(imagePath);
     int red, green, blue;
-    int height;
-    int width;
+    char buffer[BUFFER_SIZE];
+    int n;
+    int new_value;
+    int dataOffset;
 
-    height = getImageHeight(imageDescriptor);
-    width = getImageWidth(imageDescriptor);
+    // Bytes 10-13 represents the offset where the pixels start
+    lseek(imageDescriptor, 10, SEEK_SET);
+
+    if(read(imageDescriptor, &dataOffset, 4) != 4){
+        perror("Failed to get dataOffset");
+        exit(-1);
+    }
     
-    lseek(imageDescriptor, 54, SEEK_SET);
-    int i;
-    for(i = 0; i < height*width; ++i){
-        red = getPixel(imageDescriptor);
-        green = getPixel(imageDescriptor);
-        blue = getPixel(imageDescriptor);
+    // Move our cursor at the begining of RasterData
+    lseek(imageDescriptor, dataOffset, SEEK_SET);
+    
+    // Read a chunk of RGB values (3 for each pixel)
+    while((n = read(imageDescriptor, buffer, BUFFER_SIZE)) > 0){
+        // Move cursor back where we read current values in buffer
+        lseek(imageDescriptor, -n, SEEK_CUR);
 
-        int new_v = 0.3*red + 0.6*green + 0.1*blue;
+        // For each pixel we have 3 values so we work on 3 bytes at each iteration
+        for(int i = 0; i + 2 < n; i += 3){
+            red = buffer[i];
+            green = buffer[i+1];
+            blue = buffer[i+2];
 
-        lseek(imageDescriptor, -3, SEEK_CUR);
+            new_value = red * .299f + green * .587f + blue * .144f;
 
-        write(imageDescriptor, &new_v, 1);
-        write(imageDescriptor, &new_v, 1);
-        write(imageDescriptor, &new_v, 1);
+            buffer[i] = new_value;
+            buffer[i+1] = new_value;
+            buffer[i+2] = new_value;
+
+        }
+        // Overwrite RGB values
+        write(imageDescriptor, buffer, n);
 
     }
 

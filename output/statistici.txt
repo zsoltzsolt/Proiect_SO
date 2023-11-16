@@ -2,7 +2,19 @@ nume fisier: input/fisier.txt
 dimensiune: 12 octeti
 numar legaturi: 1
 identificatorul utilizatorului: 501
-timpul ultimei modificari: 13.11.2023
+timpul ultimei modificari: 15.11.2023
+drepturi de accces user: RW-
+drepturi de accces grup: R--
+drepturi de accces altii: R--
+
+
+nume fisier: input/imagine_3.bmp
+inaltime: 256
+latime: 256
+dimensiune: 196666 octeti
+numar legaturi: 1
+identificatorul utilizatorului: 501
+timpul ultimei modificari: 16.11.2023
 drepturi de accces user: RW-
 drepturi de accces grup: R--
 drepturi de accces altii: R--
@@ -10,18 +22,6 @@ drepturi de accces altii: R--
 
 nume fisier: input/z_fisier.txt
 dimensiune: 129 octeti
-numar legaturi: 1
-identificatorul utilizatorului: 501
-timpul ultimei modificari: 13.11.2023
-drepturi de accces user: RW-
-drepturi de accces grup: R--
-drepturi de accces altii: R--
-
-
-nume fisier: input/imagine copy.bmp
-inaltime: 1280
-latime: 1920
-dimensiune: 7372938 octeti
 numar legaturi: 1
 identificatorul utilizatorului: 501
 timpul ultimei modificari: 15.11.2023
@@ -44,7 +44,7 @@ latime: 1920
 dimensiune: 7372938 octeti
 numar legaturi: 1
 identificatorul utilizatorului: 501
-timpul ultimei modificari: 15.11.2023
+timpul ultimei modificari: 16.11.2023
 drepturi de accces user: RW-
 drepturi de accces grup: R--
 drepturi de accces altii: R--
