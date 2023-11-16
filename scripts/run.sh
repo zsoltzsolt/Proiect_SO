@@ -5,7 +5,7 @@ EXECUTABLE="./bin/program"
 
 gcc -Wall -o $EXECUTABLE $MAIN_FILE $OTHER_FILES
 
-./"$EXECUTABLE" $1
+./"$EXECUTABLE" $1 $2
 
 if test $? -eq 0 
 then echo "Succesfully executed"

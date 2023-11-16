@@ -16,23 +16,28 @@
 
 void verifyInputArguments(int argc, char **argv){
 
-    if(argc != 2){
+    if(argc != 3){
         perror("Invalid number of arguments!");
         exit(-1);
     }
 
     if(isDirectory(argv[1]) == 0){
-        perror("Given argument is not a directory");
+        perror("First argument is not a directory");
+        exit(-1);
+    }
+
+    if(isDirectory(argv[2]) == 0){
+        perror("Second argument is not a directory");
         exit(-1);
     }
 
 }
 
-void scanDirectory(char *directoryPath){
+void scanDirectory(char *inputDirectory, char *outputDirectory){
 
     struct dirent *directoryContent;
 
-    DIR *directory = openDirectory(directoryPath);
+    DIR *directory = openDirectory(inputDirectory);
     char newLine[] = "\n\n";
     pid_t pids[MAX_PROCESS_NUM], wpid;
     int status;
@@ -43,7 +48,7 @@ void scanDirectory(char *directoryPath){
 
     while((directoryContent = readdir(directory)) != NULL){
         char path[255];
-        sprintf(path, "%s/%s", directoryPath, directoryContent->d_name);
+        sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name);
 
         if((pids[i] = fork()) < 0){
             perror("Error\n");
@@ -51,7 +56,7 @@ void scanDirectory(char *directoryPath){
         }
         else if(pids[i] == 0){
             char fileName[255];
-            sprintf(fileName, "%s_%s",directoryContent->d_name, "statistica.txt");
+            sprintf(fileName, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt");
             int outputFile = createFile(fileName);
 
             if(isLink(path)){
@@ -93,9 +98,8 @@ int main(int argc, char **argv){
 
 
     verifyInputArguments(argc, argv);
-    
 
-    scanDirectory(argv[1]);
+    scanDirectory(argv[1], argv[2]);
 
     return 0;
 }
