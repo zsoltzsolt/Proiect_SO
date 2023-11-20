@@ -10,8 +10,6 @@ int isLink(char *path){
 
     struct stat fileStat = getFileStat(path);
     struct stat targetStat;
-    linkData data;
-    int linkStat;
     
     // targetStat cresponds to metadata about the ACTUAL file
     if(stat(path, &targetStat)){
@@ -19,7 +17,7 @@ int isLink(char *path){
         exit(-1);
     }
 
-    if(S_ISLNK(fileStat.st_mode) && S_ISLNK(targetStat.st_mode))
+    if(S_ISLNK(fileStat.st_mode) && S_ISREG(targetStat.st_mode))
         return 1;
 
     return 0;

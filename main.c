@@ -47,9 +47,11 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
 
     while((directoryContent = readdir(directory)) != NULL){
         char path[255], fileName[255];
+        sprintf(fileName, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt");
         int outputFile = createFile(fileName), returnValue = 0;
         sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name);
-        
+    
+
         // If it is BMP file create 2 separate processes and exit with code 10 (num lines)
         if(isBMPFile(path)){
             if((pids[i] = fork()) < 0){
