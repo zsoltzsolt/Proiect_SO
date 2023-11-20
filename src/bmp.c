@@ -6,6 +6,7 @@
 #include "../include/bmp.h"
 #include "../include/file.h"
 #include<math.h>
+#include <stdio.h>
 
 #define BUFFER_SIZE 1200
 
@@ -96,14 +97,40 @@ void modifyColorTable(int imageDescriptor, int bitsCount){
 
 }
 
+void modifyRasterData(int imageDescriptor, int dataOffset){
+    int n, red, green, blue, new_value;
+    char buffer[4000];
+
+    // Move our cursor at the begining of RasterData
+    lseek(imageDescriptor, dataOffset, SEEK_SET);
+    
+    // Read a chunk of RGB values (3 for each pixel)
+    while((n = read(imageDescriptor, buffer, BUFFER_SIZE)) > 0){
+        // Move cursor back where we read current values in buffer
+        lseek(imageDescriptor, -n, SEEK_CUR);
+        // For each pixel we have 3 values so we work on 3 bytes at each iteration
+        for(int i = 0; i + 2 < n; i += 3){
+            red = buffer[i];
+            green = buffer[i+1];
+            blue = buffer[i+2];
+
+            new_value = red * .299f + green * .587f + blue * .144f;
+
+            buffer[i] = new_value;
+            buffer[i+1] = new_value;
+            buffer[i+2] = new_value;
+
+        }
+        // Overwrite RGB values
+        write(imageDescriptor, buffer, n);
+    }
+}
+
 void transformToGrayscale(char *imagePath){
 
-    int imageDescriptor = openFile(imagePath);
-    int red, green, blue;
-    char buffer[BUFFER_SIZE];
-    int n;
-    int new_value;
-    int dataOffset, bitsCount;
+    int imageDescriptor, dataOffset, bitsCount;
+
+    imageDescriptor = openFile(imagePath);
 
     // Bytes 10-13 represents the offset where the pixels start
     lseek(imageDescriptor, 10, SEEK_SET);
@@ -120,52 +147,12 @@ void transformToGrayscale(char *imagePath){
         exit(-1);
     }
 
-    printf("Bits count: %d\n", bitsCount);
-
-    lseek(imageDescriptor, 46, SEEK_SET);
-
-    int numOfColors = 0;
-
-    if(read(imageDescriptor, &numOfColors, 4) != 4){
-        perror("Failed to get dataOffset");
-        exit(-1);
-    }
-    
-    printf("numOfColors: %d\n", numOfColors);
-
-    int colorTableSize = pow(2,bitsCount) * 4 ;
+    printf("BITS COUNT: %d\n", bitsCount);
 
     if(bitsCount <= 8)
         modifyColorTable(imageDescriptor, bitsCount);
-
-    else{
-
-    // Move our cursor at the begining of RasterData
-    lseek(imageDescriptor, dataOffset, SEEK_SET);
-    
-    // Read a chunk of RGB values (3 for each pixel)
-    while((n = read(imageDescriptor, buffer, BUFFER_SIZE)) > 0){
-        // Move cursor back where we read current values in buffer
-        lseek(imageDescriptor, -n, SEEK_CUR);
-
-        // For each pixel we have 3 values so we work on 3 bytes at each iteration
-        for(int i = 0; i + 2 < n; i += 3){
-            red = buffer[i];
-            green = buffer[i+1];
-            blue = buffer[i+2];
-
-            new_value = red * .299f + green * .587f + blue * .144f;
-
-            buffer[i] = new_value;
-            buffer[i+1] = new_value;
-            buffer[i+2] = new_value;
-
-        }
-        // Overwrite RGB values
-        write(imageDescriptor, buffer, n);
-
-    }
-    }
+    else
+        modifyRasterData(imageDescriptor, dataOffset);
 
     closeFile(imageDescriptor);
 

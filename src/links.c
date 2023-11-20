@@ -9,8 +9,15 @@
 int isLink(char *path){
 
     struct stat fileStat = getFileStat(path);
+    struct stat targetStat;
+    
+    // targetStat cresponds to metadata about the ACTUAL file
+    if(stat(path, &targetStat)){
+        perror("Error fetching file stat1");
+        exit(-1);
+    }
 
-    if(S_ISLNK(fileStat.st_mode))
+    if(S_ISLNK(fileStat.st_mode) && S_ISREG(targetStat.st_mode))
         return 1;
 
     return 0;
