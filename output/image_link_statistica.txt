@@ -1,8 +1,0 @@
-nume legatura: input/image_link
-dimensiune legatura: 11
-dimensiune fisier: 7372938
-drepturi de accces user: RWX
-drepturi de accces grup: R-X
-drepturi de accces altii: R-X
-
-

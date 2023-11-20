@@ -51,7 +51,7 @@ void getLinkStatistics(char *linkPath, int outputFile){
     
     // targetStat cresponds to metadata about the ACTUAL file
     if(stat(linkPath, &targetStat)){
-        perror("Error fetching file stat");
+        perror("Error fetching file stat1");
         exit(-1);
     }
 

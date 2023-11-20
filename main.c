@@ -49,37 +49,53 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
     while((directoryContent = readdir(directory)) != NULL){
         char path[255];
         sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name);
-
-        if((pids[i] = fork()) < 0){
+        char fileName[255];
+        sprintf(fileName, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt");
+        int outputFile = createFile(fileName);
+        int returnValue = 0;
+        if(isBMPFile(path)){
+            if((pids[i] = fork()) < 0){
+                perror("Error\n");
+                exit(1);
+            }
+            else if(pids[i] == 0){
+                transformToGrayscale(path);
+                exit(5);
+            }
+            if((pids[i] = fork()) < 0){
+                perror("Error\n");
+                exit(1);
+            }
+            else if(pids[i] == 0){
+                getFileStatistics(path, outputFile, 1);
+                exit(6);
+            }
+            
+        }
+        else if((pids[i] = fork()) < 0){
             perror("Error\n");
             exit(1);
         }
         else if(pids[i] == 0){
-            char fileName[255];
-            sprintf(fileName, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt");
-            int outputFile = createFile(fileName);
 
             if(isLink(path)){
+                returnValue = 2;
                 getLinkStatistics(path, outputFile);
                 write(outputFile, newLine, 2);
             }
-            else if(isBMPFile(path)){
-                transformToGrayscale(path);
-                getFileStatistics(path, outputFile, 1);
-                write(outputFile, newLine, 2);
-            }
             else if(isFile(path)){
+                returnValue = 3;
                 getFileStatistics(path, outputFile, 0);
                 write(outputFile, newLine, 2);
             }
             else if(isDirectory(path)){
+                returnValue = 4;
                 getDirectoryStatistics(path, outputFile);
                 write(outputFile, newLine, 2);
             }
             close(outputFile);
-            exit(i);
+            exit(returnValue);
         }
-
         ++i;
     }
 
@@ -90,6 +106,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
     }
 
     closeDirectory(directory);
+        
 
 }
 
