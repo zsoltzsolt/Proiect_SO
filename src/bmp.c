@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "../include/bmp.h"
 #include "../include/file.h"
+#include<math.h>
 
 #define BUFFER_SIZE 1200
 
@@ -68,6 +69,33 @@ int getImageWidth(int imageDescriptor){
 
 }
 
+void modifyColorTable(int imageDescriptor, int bitsCount){
+
+    lseek(imageDescriptor, 54, SEEK_SET);
+    int n, red, green, blue, new_value;
+    char buffer[10];
+    int count = 0;
+    
+    while(count < pow(2,bitsCount) && (n = read(imageDescriptor, buffer, 4)) > 0){
+        lseek(imageDescriptor, -n, SEEK_CUR);
+
+        count += 1;
+        red = buffer[0];
+        green = buffer[1];
+        blue = buffer[2];
+
+        new_value = red * .299f + green * .587f + blue * .144f;
+
+        buffer[0] = new_value;
+        buffer[1] = new_value;
+        buffer[2] = new_value;
+
+        // Overwrite RGB values
+        write(imageDescriptor, buffer, 4);
+    }
+
+}
+
 void transformToGrayscale(char *imagePath){
 
     int imageDescriptor = openFile(imagePath);
@@ -75,7 +103,7 @@ void transformToGrayscale(char *imagePath){
     char buffer[BUFFER_SIZE];
     int n;
     int new_value;
-    int dataOffset;
+    int dataOffset, bitsCount;
 
     // Bytes 10-13 represents the offset where the pixels start
     lseek(imageDescriptor, 10, SEEK_SET);
@@ -84,7 +112,34 @@ void transformToGrayscale(char *imagePath){
         perror("Failed to get dataOffset");
         exit(-1);
     }
+
+    lseek(imageDescriptor, 28, SEEK_SET);
+
+    if(read(imageDescriptor, &bitsCount, 4) != 4){
+        perror("Failed to get dataOffset");
+        exit(-1);
+    }
+
+    printf("Bits count: %d\n", bitsCount);
+
+    lseek(imageDescriptor, 46, SEEK_SET);
+
+    int numOfColors = 0;
+
+    if(read(imageDescriptor, &numOfColors, 4) != 4){
+        perror("Failed to get dataOffset");
+        exit(-1);
+    }
     
+    printf("numOfColors: %d\n", numOfColors);
+
+    int colorTableSize = pow(2,bitsCount) * 4 ;
+
+    if(bitsCount <= 8)
+        modifyColorTable(imageDescriptor, bitsCount);
+
+    else{
+
     // Move our cursor at the begining of RasterData
     lseek(imageDescriptor, dataOffset, SEEK_SET);
     
@@ -109,6 +164,7 @@ void transformToGrayscale(char *imagePath){
         // Overwrite RGB values
         write(imageDescriptor, buffer, n);
 
+    }
     }
 
     closeFile(imageDescriptor);

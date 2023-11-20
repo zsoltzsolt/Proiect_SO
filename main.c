@@ -60,7 +60,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
             }
             else if(pids[i] == 0){
                 transformToGrayscale(path);
-                exit(5);
+                exit(10);
             }
             if((pids[i] = fork()) < 0){
                 perror("Error\n");
@@ -68,7 +68,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
             }
             else if(pids[i] == 0){
                 getFileStatistics(path, outputFile, 1);
-                exit(6);
+                exit(10);
             }
             
         }
@@ -79,17 +79,17 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
         else if(pids[i] == 0){
 
             if(isLink(path)){
-                returnValue = 2;
+                returnValue = 6;
                 getLinkStatistics(path, outputFile);
                 write(outputFile, newLine, 2);
             }
             else if(isFile(path)){
-                returnValue = 3;
+                returnValue = 8;
                 getFileStatistics(path, outputFile, 0);
                 write(outputFile, newLine, 2);
             }
             else if(isDirectory(path)){
-                returnValue = 4;
+                returnValue = 5;
                 getDirectoryStatistics(path, outputFile);
                 write(outputFile, newLine, 2);
             }
