@@ -40,19 +40,17 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
     DIR *directory = openDirectory(inputDirectory);
     char newLine[] = "\n\n";
     pid_t pids[MAX_PROCESS_NUM], wpid;
-    int status;
-    int i = 0;
+    int status, i = 0;
 
     readdir(directory);
     readdir(directory);
 
     while((directoryContent = readdir(directory)) != NULL){
-        char path[255];
+        char path[255], fileName[255];
+        int outputFile = createFile(fileName), returnValue = 0;
         sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name);
-        char fileName[255];
-        sprintf(fileName, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt");
-        int outputFile = createFile(fileName);
-        int returnValue = 0;
+        
+        // If it is BMP file create 2 separate processes and exit with code 10 (num lines)
         if(isBMPFile(path)){
             if((pids[i] = fork()) < 0){
                 perror("Error\n");
@@ -72,6 +70,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
             }
             
         }
+        // Else for other files create a single process
         else if((pids[i] = fork()) < 0){
             perror("Error\n");
             exit(1);
@@ -83,11 +82,13 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
                 getLinkStatistics(path, outputFile);
                 write(outputFile, newLine, 2);
             }
+
             else if(isFile(path)){
                 returnValue = 8;
                 getFileStatistics(path, outputFile, 0);
                 write(outputFile, newLine, 2);
             }
+
             else if(isDirectory(path)){
                 returnValue = 5;
                 getDirectoryStatistics(path, outputFile);
@@ -99,6 +100,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
         ++i;
     }
 
+    // Wait for all processes to end and print PID and exit code
     for(int j = 0; j < i; ++j){
         wpid = wait(&status);
         if(WIFEXITED(status))
@@ -107,7 +109,6 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
 
     closeDirectory(directory);
         
-
 }
 
 
