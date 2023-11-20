@@ -61,7 +61,7 @@ struct stat getFileStat(char *path){
     struct stat fileStat;
 
     if(lstat(path, &fileStat)){
-        perror("Error fetching file stat");
+        perror("Error fetching file stat2");
         exit(-1);
     }
 

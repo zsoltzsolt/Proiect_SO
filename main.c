@@ -12,55 +12,101 @@
 #include "./include/links.h"
 #include <dirent.h>
 
+#define MAX_PROCESS_NUM 255
 
 void verifyInputArguments(int argc, char **argv){
 
-    if(argc != 2){
+    if(argc != 3){
         perror("Invalid number of arguments!");
         exit(-1);
     }
 
     if(isDirectory(argv[1]) == 0){
-        perror("Given argument is not a directory");
+        perror("First argument is not a directory");
+        exit(-1);
+    }
+
+    if(isDirectory(argv[2]) == 0){
+        perror("Second argument is not a directory");
         exit(-1);
     }
 
 }
 
-void scanDirectory(char *directoryPath, int outputFile){
+void scanDirectory(char *inputDirectory, char *outputDirectory){
 
     struct dirent *directoryContent;
 
-    DIR *directory = openDirectory(directoryPath);
+    DIR *directory = openDirectory(inputDirectory);
     char newLine[] = "\n\n";
+    pid_t pids[MAX_PROCESS_NUM], wpid;
+    int status;
+    int i = 0;
 
     readdir(directory);
     readdir(directory);
 
     while((directoryContent = readdir(directory)) != NULL){
         char path[255];
-        sprintf(path, "%s/%s", directoryPath, directoryContent->d_name);
-        if(isLink(path)){
-            getLinkStatistics(path, outputFile);
-            write(outputFile, newLine, 2);
+        sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name);
+        char fileName[255];
+        sprintf(fileName, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt");
+        int outputFile = createFile(fileName);
+        int returnValue = 0;
+        if(isBMPFile(path)){
+            if((pids[i] = fork()) < 0){
+                perror("Error\n");
+                exit(1);
+            }
+            else if(pids[i] == 0){
+                transformToGrayscale(path);
+                exit(10);
+            }
+            if((pids[i] = fork()) < 0){
+                perror("Error\n");
+                exit(1);
+            }
+            else if(pids[i] == 0){
+                getFileStatistics(path, outputFile, 1);
+                exit(10);
+            }
+            
         }
-        else if(isBMPFile(path)){
-            printf("here");
-            transformToGrayscale(path);
-            getFileStatistics(path, outputFile, 1);
-            write(outputFile, newLine, 2);
+        else if((pids[i] = fork()) < 0){
+            perror("Error\n");
+            exit(1);
         }
-        else if(isFile(path)){
-            getFileStatistics(path, outputFile, 0);
-            write(outputFile, newLine, 2);
+        else if(pids[i] == 0){
+
+            if(isLink(path)){
+                returnValue = 6;
+                getLinkStatistics(path, outputFile);
+                write(outputFile, newLine, 2);
+            }
+            else if(isFile(path)){
+                returnValue = 8;
+                getFileStatistics(path, outputFile, 0);
+                write(outputFile, newLine, 2);
+            }
+            else if(isDirectory(path)){
+                returnValue = 5;
+                getDirectoryStatistics(path, outputFile);
+                write(outputFile, newLine, 2);
+            }
+            close(outputFile);
+            exit(returnValue);
         }
-        else if(isDirectory(path)){
-            getDirectoryStatistics(path, outputFile);
-            write(outputFile, newLine, 2);
-        }
+        ++i;
+    }
+
+    for(int j = 0; j < i; ++j){
+        wpid = wait(&status);
+        if(WIFEXITED(status))
+            printf("S-a incheiat procesul cu PID-ul %d si codul %d\n", wpid, WEXITSTATUS(status));
     }
 
     closeDirectory(directory);
+        
 
 }
 
@@ -69,10 +115,8 @@ int main(int argc, char **argv){
 
 
     verifyInputArguments(argc, argv);
-    
-    int outputFile = createFile("./output/statistici.txt");
 
-    scanDirectory(argv[1], outputFile);
+    scanDirectory(argv[1], argv[2]);
 
     return 0;
 }

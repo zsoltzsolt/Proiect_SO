@@ -1,0 +1,10 @@
+nume fisier: input/imagine_2.bmp
+inaltime: 426
+latime: 640
+dimensiune: 818058 octeti
+numar legaturi: 1
+identificatorul utilizatorului: 501
+timpul ultimei modificari: 20.11.2023
+drepturi de accces user: RW-
+drepturi de accces grup: R--
+drepturi de accces altii: R--

@@ -35,7 +35,7 @@ int isDirectory(char *path){
     struct stat fileStat;
 
     if(lstat(path, &fileStat)){
-        perror("Error fetching file stat");
+        perror("Error fetching file stat3");
         exit(-1);
     }
 
