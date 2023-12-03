@@ -47,6 +47,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
     char newLine[] = "\n\n";
     pid_t pids[MAX_PROCESS_NUM], wpid;
     int status, i = 0;
+    int nrPropozitiiCorecte = 0;
 
     readdir(directory);
     readdir(directory);
@@ -80,7 +81,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
             
         }
         else if(isFile(path)){
-
+            // Daca e fisier, creez 2 pipeuri (1 pentru comunicare intre cei doi fii si unul de la fiul la parinte)
             int ff[2];
             int fp[2];
 
@@ -94,12 +95,15 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
                 exit(1);
             }
 
+            // Primul fiu va scrie fisierul de statistica
+            // Totodata, va scrie in pipe-ul ff continutul fisierului
+
             if((pids[i] = fork()) < 0){
                 perror("Error\n");
                 exit(1);
             }
             else if(pids[i] == 0){
-                
+            
                 close(fp[0]);
                 close(fp[1]);
                 close(ff[0]);
@@ -112,10 +116,14 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
                 execlp("cat", "cat", path, NULL);
 
-                perror("Eroare exec cat");
+                perror("Error executing cat\n");
                 exit(1);
             }
+
             ++i;
+
+            // Acest proces va prii de la celalt fiu prin pipe continutul fisierului si va numara propozitiile corecte
+            // Numarul de propozitii corecte va fi scris in pipe-ul fp - transmis parintelui
             if((pids[i] = fork()) < 0){
                 perror("Error\n");
                 exit(1);
@@ -136,7 +144,10 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
                     exit(1);
                 }
 
-                    execlp("bash", "bash", "scripts/script.sh", c, NULL);
+                execlp("bash", "bash", "scripts/script.sh", c, NULL);
+
+                perror("Error executing script\n");
+                exit(1);
             }
 
             // Procesul parinte
@@ -144,16 +155,14 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
             close(ff[1]);
             close(fp[1]);
 
-            // Așteaptă ca procesul copil B să se termine
-            waitpid(pids[i], NULL, 0);
-
-            char buffer[100];
+            char value = 0;
     
-            while (read(fp[0], buffer, sizeof(buffer)) > 0)
+            if (read(fp[0], &value, sizeof(char)) > 0)
             {
-                printf("Sunt %c propozitii corecte\n", buffer[0]);
+                printf("Sunt %d propozitii corecte\n", value-48);
             }
-    
+
+            nrPropozitiiCorecte += (value-48);
     
             close(fp[0]);
             
@@ -188,6 +197,8 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
         if(WIFEXITED(status))
             printf("S-a incheiat procesul cu PID-ul %d si codul %d\n", wpid, WEXITSTATUS(status));
     }
+
+    printf("Au fost identificate in total %d propozitii corecte care contin caracterul %c\n", nrPropozitiiCorecte, c[0]);
 
     closeDirectory(directory);
         
