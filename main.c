@@ -11,12 +11,13 @@
 #include "./include/directory.h"
 #include "./include/links.h"
 #include <dirent.h>
+#include <ctype.h>
 
 #define MAX_PROCESS_NUM 255
 
 void verifyInputArguments(int argc, char **argv){
 
-    if(argc != 3){
+    if(argc != 4){
         perror("Invalid number of arguments!");
         exit(-1);
     }
@@ -31,9 +32,14 @@ void verifyInputArguments(int argc, char **argv){
         exit(-1);
     }
 
+    if((strlen(argv[3]) != 1) || (isalnum(argv[3][0]) == 0)){
+        perror("Third argument is not a alphanumeric character");
+        exit(-1);
+    }
+
 }
 
-void scanDirectory(char *inputDirectory, char *outputDirectory){
+void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
     struct dirent *directoryContent;
 
@@ -62,6 +68,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
                 transformToGrayscale(path);
                 exit(10);
             }
+            ++i;
             if((pids[i] = fork()) < 0){
                 perror("Error\n");
                 exit(1);
@@ -70,6 +77,85 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
                 getFileStatistics(path, outputFile, 1);
                 exit(10);
             }
+            
+        }
+        else if(isFile(path)){
+
+            int ff[2];
+            int fp[2];
+
+            if (pipe(ff) < 0) {
+                perror("Eroare creeare pipe!");
+                exit(1);
+            }
+
+            if (pipe(fp) < 0) {
+                perror("Eroare creeare pipe!");
+                exit(1);
+            }
+
+            if((pids[i] = fork()) < 0){
+                perror("Error\n");
+                exit(1);
+            }
+            else if(pids[i] == 0){
+                
+                close(fp[0]);
+                close(fp[1]);
+                close(ff[0]);
+
+                getFileStatistics(path, outputFile, 0);
+
+                dup2(ff[1], 1);
+
+                close(ff[1]);
+
+                execlp("cat", "cat", path, NULL);
+
+                perror("Eroare exec cat");
+                exit(1);
+            }
+            ++i;
+            if((pids[i] = fork()) < 0){
+                perror("Error\n");
+                exit(1);
+            }
+            else if(pids[i] == 0){
+                close(ff[1]);
+                close(fp[0]);
+
+                dup2(ff[0], 0);
+                dup2(fp[1], 1);
+
+                if(close(ff[0]) < 0) {
+                    perror("Eroare inchidere capat pipe!");
+                    exit(1);
+                }
+                if(close(fp[1]) < 0) {
+                    perror("Eroare inchidere capat pipe!");
+                    exit(1);
+                }
+
+                    execlp("bash", "bash", "scripts/script.sh", c, NULL);
+            }
+
+            // Procesul parinte
+            close(ff[0]);
+            close(ff[1]);
+            close(fp[1]);
+
+            // Așteaptă ca procesul copil B să se termine
+            waitpid(pids[i], NULL, 0);
+
+            char buffer[100];
+    
+            while (read(fp[0], buffer, sizeof(buffer)) > 0)
+            {
+                printf("Sunt %c propozitii corecte\n", buffer[0]);
+            }
+    
+    
+            close(fp[0]);
             
         }
         // Else for other files create a single process
@@ -82,12 +168,6 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
             if(isLink(path)){
                 returnValue = 6;
                 getLinkStatistics(path, outputFile);
-                write(outputFile, newLine, 2);
-            }
-
-            else if(isFile(path)){
-                returnValue = 8;
-                getFileStatistics(path, outputFile, 0);
                 write(outputFile, newLine, 2);
             }
 
@@ -119,7 +199,7 @@ int main(int argc, char **argv){
 
     verifyInputArguments(argc, argv);
 
-    scanDirectory(argv[1], argv[2]);
+    scanDirectory(argv[1], argv[2], argv[3]);
 
     return 0;
 }

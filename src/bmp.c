@@ -147,8 +147,6 @@ void transformToGrayscale(char *imagePath){
         exit(-1);
     }
 
-    printf("BITS COUNT: %d\n", bitsCount);
-
     if(bitsCount <= 8)
         modifyColorTable(imageDescriptor, bitsCount);
     else
