@@ -11,12 +11,13 @@
 #include "./include/directory.h"
 #include "./include/links.h"
 #include <dirent.h>
+#include <ctype.h>
 
 #define MAX_PROCESS_NUM 255
 
 void verifyInputArguments(int argc, char **argv){
 
-    if(argc != 3){
+    if(argc != 4){
         perror("Invalid number of arguments!");
         exit(-1);
     }
@@ -31,9 +32,14 @@ void verifyInputArguments(int argc, char **argv){
         exit(-1);
     }
 
+    if((strlen(argv[3]) != 1) || (isalnum(argv[3][0]) == 0)){
+        perror("Third argument is not a alphanumeric character");
+        exit(-1);
+    }
+
 }
 
-void scanDirectory(char *inputDirectory, char *outputDirectory){
+void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
     struct dirent *directoryContent;
 
@@ -41,6 +47,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
     char newLine[] = "\n\n";
     pid_t pids[MAX_PROCESS_NUM], wpid;
     int status, i = 0;
+    int nrPropozitiiCorecte = 0;
 
     readdir(directory);
     readdir(directory);
@@ -62,6 +69,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
                 transformToGrayscale(path);
                 exit(10);
             }
+            ++i;
             if((pids[i] = fork()) < 0){
                 perror("Error\n");
                 exit(1);
@@ -70,6 +78,93 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
                 getFileStatistics(path, outputFile, 1);
                 exit(10);
             }
+            
+        }
+        else if(isFile(path)){
+            // Daca e fisier, creez 2 pipeuri (1 pentru comunicare intre cei doi fii si unul de la fiul la parinte)
+            int ff[2];
+            int fp[2];
+
+            if (pipe(ff) < 0) {
+                perror("Eroare creeare pipe!");
+                exit(1);
+            }
+
+            if (pipe(fp) < 0) {
+                perror("Eroare creeare pipe!");
+                exit(1);
+            }
+
+            // Primul fiu va scrie fisierul de statistica
+            // Totodata, va scrie in pipe-ul ff continutul fisierului
+
+            if((pids[i] = fork()) < 0){
+                perror("Error\n");
+                exit(1);
+            }
+            else if(pids[i] == 0){
+            
+                close(fp[0]);
+                close(fp[1]);
+                close(ff[0]);
+
+                getFileStatistics(path, outputFile, 0);
+
+                dup2(ff[1], 1);
+
+                close(ff[1]);
+
+                execlp("bash", "bash","scripts/lines.sh", path, NULL);
+
+                perror("Error executing cat\n");
+                exit(1);
+            }
+
+            ++i;
+
+            // Acest proces va prii de la celalt fiu prin pipe continutul fisierului si va numara propozitiile corecte
+            // Numarul de propozitii corecte va fi scris in pipe-ul fp - transmis parintelui
+            if((pids[i] = fork()) < 0){
+                perror("Error\n");
+                exit(1);
+            }
+            else if(pids[i] == 0){
+                close(ff[1]);
+                close(fp[0]);
+
+                dup2(ff[0], 0);
+                dup2(fp[1], 1);
+
+                if(close(ff[0]) < 0) {
+                    perror("Eroare inchidere capat pipe!");
+                    exit(1);
+                }
+                if(close(fp[1]) < 0) {
+                    perror("Eroare inchidere capat pipe!");
+                    exit(1);
+                }
+
+                execlp("bash", "bash", "scripts/script.sh", c, NULL);
+
+                perror("Error executing script\n");
+                exit(1);
+            }
+
+            // Procesul parinte
+            close(ff[0]);
+            close(ff[1]);
+            close(fp[1]);
+
+            char value = 0;
+    
+            if (read(fp[0], &value, sizeof(char)) > 0)
+            {
+                printf("Sunt %d propozitii corecte\n", value-48);
+            }
+
+            nrPropozitiiCorecte += (value-48);
+    
+            close(fp[0]);
             
         }
         // Else for other files create a single process
@@ -82,12 +177,6 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
             if(isLink(path)){
                 returnValue = 6;
                 getLinkStatistics(path, outputFile);
-                write(outputFile, newLine, 2);
-            }
-
-            else if(isFile(path)){
-                returnValue = 8;
-                getFileStatistics(path, outputFile, 0);
                 write(outputFile, newLine, 2);
             }
 
@@ -109,6 +198,8 @@ void scanDirectory(char *inputDirectory, char *outputDirectory){
             printf("S-a incheiat procesul cu PID-ul %d si codul %d\n", wpid, WEXITSTATUS(status));
     }
 
+    printf("Au fost identificate in total %d propozitii corecte care contin caracterul %c\n", nrPropozitiiCorecte, c[0]);
+
     closeDirectory(directory);
         
 }
@@ -119,7 +210,7 @@ int main(int argc, char **argv){
 
     verifyInputArguments(argc, argv);
 
-    scanDirectory(argv[1], argv[2]);
+    scanDirectory(argv[1], argv[2], argv[3]);
 
     return 0;
 }
