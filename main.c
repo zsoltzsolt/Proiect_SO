@@ -114,7 +114,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
                 close(ff[1]);
 
-                execlp("cat", "cat", path, NULL);
+                execlp("bash", "bash","scripts/lines.sh", path, NULL);
 
                 perror("Error executing cat\n");
                 exit(1);
