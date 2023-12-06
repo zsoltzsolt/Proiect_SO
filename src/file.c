@@ -203,7 +203,7 @@ int getFileStatistics(char *imagePath, int outputFile, int isImage){
 
     closeFile(image);
 
-    return 8 + 2*isImage;
+    return (8 + 2*isImage);
 
 }
 

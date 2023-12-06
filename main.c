@@ -40,14 +40,20 @@ void verifyInputArguments(int argc, char **argv){
 
 }
 
+void createPipe(int *pipefd){
+    if(pipe(pipefd) < 0){
+        perror("Error creating pipe");
+        exit(-1);
+    }
+}
+
 void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
     struct dirent *directoryContent;
-
     DIR *directory = openDirectory(inputDirectory);
-    pid_t pid, wpid;
+    pid_t pid;
     int status;
-    int nrPropozitiiCorecte = 0;
+    int numOfCorrectSentences = 0;
     int numOfCreatedProcesses = 0;
 
     readdir(directory);
@@ -89,15 +95,8 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
             numOfCreatedProcesses += 2;
 
-            if (pipe(ff) < 0) {
-                perror("Eroare creeare pipe!");
-                exit(1);
-            }
-
-            if (pipe(fp) < 0) {
-                perror("Eroare creeare pipe!");
-                exit(1);
-            }
+            createPipe(ff);
+            createPipe(fp);
 
             // Primul fiu va scrie fisierul de statistica
             // Totodata, va scrie in pipe-ul ff continutul fisierului
@@ -152,9 +151,11 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
             if (read(fp[0], &value, 10) > 0)
                 printf("Sunt %ld propozitii corecte\n", strtol(value, NULL, 10));
 
-            nrPropozitiiCorecte += strtol(value, NULL, 10);
+            numOfCorrectSentences += strtol(value, NULL, 10);
     
             close(fp[0]);
+
+
         }
         // Else for other files create a single process
         else if((pid = fork()) < 0){
@@ -178,12 +179,12 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
     // Wait for all processes to end and print PID and exit code
     for(int j = 0; j < numOfCreatedProcesses; ++j){
-        wpid = wait(&status);
+        int wpid = wait(&status);
         if(WIFEXITED(status))
             printf("S-a incheiat procesul cu PID-ul %d si codul %d\n", wpid, WEXITSTATUS(status));
     }
 
-    printf("Au fost identificate in total %d propozitii corecte care contin caracterul %c\n", nrPropozitiiCorecte, c[0]);
+    printf("Au fost identificate in total %d propozitii corecte care contin caracterul %c\n", numOfCorrectSentences, c[0]);
 
     closeDirectory(directory);
 }
