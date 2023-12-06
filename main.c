@@ -45,10 +45,10 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
     struct dirent *directoryContent;
 
     DIR *directory = openDirectory(inputDirectory);
-    char newLine[] = "\n\n";
-    pid_t pids[MAX_PROCESS_NUM], wpid;
-    int status, i = 0;
+    pid_t pid, wpid;
+    int status;
     int nrPropozitiiCorecte = 0;
+    int numOfCreatedProcesses = 0;
 
     readdir(directory);
     readdir(directory);
@@ -62,20 +62,21 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
         // If it is BMP file create 2 separate processes and exit with code 10 (num lines)
         if(isBMPFile(path)){
-            if((pids[i] = fork()) < 0){
+            numOfCreatedProcesses += 2;
+            if((pid = fork()) < 0){
                 perror("Error\n");
                 exit(1);
             }
-            else if(pids[i] == 0){
+            else if(pid == 0){
                 transformToGrayscale(path);
                 exit(10);
             }
-            ++i;
-            if((pids[i] = fork()) < 0){
+
+            if((pid = fork()) < 0){
                 perror("Error\n");
                 exit(1);
             }
-            else if(pids[i] == 0){
+            else if(pid == 0){
                 getFileStatistics(path, outputFile, 1);
                 exit(10);
             }
@@ -85,6 +86,8 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
             // Daca e fisier, creez 2 pipeuri (1 pentru comunicare intre cei doi fii si unul de la fiul la parinte)
             int ff[2];
             int fp[2];
+
+            numOfCreatedProcesses += 2;
 
             if (pipe(ff) < 0) {
                 perror("Eroare creeare pipe!");
@@ -99,11 +102,11 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
             // Primul fiu va scrie fisierul de statistica
             // Totodata, va scrie in pipe-ul ff continutul fisierului
 
-            if((pids[i] = fork()) < 0){
+            if((pid = fork()) < 0){
                 perror("Error\n");
                 exit(1);
             }
-            else if(pids[i] == 0){
+            else if(pid == 0){
             
                 close(fp[0]);
                 close(fp[1]);
@@ -112,38 +115,26 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
                 getFileStatistics(path, outputFile, 0);
 
                 dup2(ff[1], 1);
-
                 close(ff[1]);
-
                 execlp("bash", "bash","scripts/lines.sh", path, NULL);
 
                 perror("Error executing cat\n");
                 exit(1);
             }
 
-            ++i;
-
             // Acest proces va prii de la celalt fiu prin pipe continutul fisierului si va numara propozitiile corecte
             // Numarul de propozitii corecte va fi scris in pipe-ul fp - transmis parintelui
-            if((pids[i] = fork()) < 0){
+            if((pid = fork()) < 0){
                 perror("Error\n");
                 exit(1);
             }
-            else if(pids[i] == 0){
+            else if(pid == 0){
                 close(ff[1]);
                 close(fp[0]);
-
                 dup2(ff[0], 0);
                 dup2(fp[1], 1);
-
-                if(close(ff[0]) < 0) {
-                    perror("Eroare inchidere capat pipe!");
-                    exit(1);
-                }
-                if(close(fp[1]) < 0) {
-                    perror("Eroare inchidere capat pipe!");
-                    exit(1);
-                }
+                close(ff[0]);
+                close(fp[1]);
 
                 execlp("bash", "bash", "scripts/script.sh", c, NULL);
 
@@ -159,41 +150,37 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
             char value[10];
     
             if (read(fp[0], &value, 10) > 0)
-            {
                 printf("Sunt %ld propozitii corecte\n", strtol(value, NULL, 10));
-            }
 
             nrPropozitiiCorecte += strtol(value, NULL, 10);
     
             close(fp[0]);
-            
         }
         // Else for other files create a single process
-        else if((pids[i] = fork()) < 0){
+        else if((pid = fork()) < 0){
             perror("Error\n");
             exit(1);
         }
-        else if(pids[i] == 0){
+        else if(pid == 0){
+
+            numOfCreatedProcesses += 1;
 
             if(isLink(path)){
                 returnValue = 6;
                 getLinkStatistics(path, outputFile);
-                write(outputFile, newLine, 2);
             }
 
             else if(isDirectory(path)){
                 returnValue = 5;
                 getDirectoryStatistics(path, outputFile);
-                write(outputFile, newLine, 2);
             }
             close(outputFile);
             exit(returnValue);
         }
-        ++i;
     }
 
     // Wait for all processes to end and print PID and exit code
-    for(int j = 0; j < i; ++j){
+    for(int j = 0; j < numOfCreatedProcesses; ++j){
         wpid = wait(&status);
         if(WIFEXITED(status))
             printf("S-a incheiat procesul cu PID-ul %d si codul %d\n", wpid, WEXITSTATUS(status));
@@ -202,15 +189,12 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
     printf("Au fost identificate in total %d propozitii corecte care contin caracterul %c\n", nrPropozitiiCorecte, c[0]);
 
     closeDirectory(directory);
-        
 }
 
 
 int main(int argc, char **argv){
 
-
     verifyInputArguments(argc, argv);
-
     scanDirectory(argv[1], argv[2], argv[3]);
 
     return 0;
