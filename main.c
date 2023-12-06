@@ -47,11 +47,138 @@ void createPipe(int *pipefd){
     }
 }
 
+void closeReadEnd(int *pipefd){
+    if(close(pipefd[0]) < 0){
+        perror("Error closing pipe");
+        exit(-1);
+    }
+}
+
+void closeWriteEnd(int *pipefd){
+    if(close(pipefd[1]) < 0){
+        perror("Error closing pipe");
+        exit(-1);
+    }
+}
+
+void bmpHandler(char *path, int outputFile){
+
+    pid_t pid;
+
+    if((pid = fork()) < 0){
+        perror("Error\n");
+            exit(1);
+    }
+    else if(pid == 0){
+        transformToGrayscale(path);
+        exit(0);
+    }
+
+    if((pid = fork()) < 0){
+        perror("Error\n");
+        exit(1);
+    }
+    else if(pid == 0){
+        int exit_value = getFileStatistics(path, outputFile, 1);
+        exit(exit_value);
+    }
+}
+
+int fileHandler(char *path, int outputFile, char *c){
+    pid_t pid;
+    // Daca e fisier, creez 2 pipeuri (1 pentru comunicare intre cei doi fii si unul de la fiul la parinte)
+    int ff[2];
+    int fp[2];
+
+    createPipe(ff);
+    createPipe(fp);
+
+    // Primul fiu va scrie fisierul de statistica
+    // Totodata, va scrie in pipe-ul ff continutul fisierului
+    if((pid = fork()) < 0){
+        perror("Error\n");
+        exit(1);
+    }
+    else if(pid == 0){
+        closeReadEnd(fp);
+        closeWriteEnd(fp);
+        closeReadEnd(ff);
+
+        getFileStatistics(path, outputFile, 0);
+
+        dup2(ff[1], 1);
+        closeWriteEnd(ff);
+
+        execlp("bash", "bash","scripts/lines.sh", path, NULL);
+        perror("Error executing cat\n");
+        exit(1);
+    }
+
+    // Acest proces va prii de la celalt fiu prin pipe continutul fisierului si va numara propozitiile corecte
+    // Numarul de propozitii corecte va fi scris in pipe-ul fp - transmis parintelui
+    if((pid = fork()) < 0){
+        perror("Error\n");
+        exit(1);
+    }
+    else if(pid == 0){
+        closeWriteEnd(ff);
+        closeReadEnd(fp);
+
+        dup2(ff[0], 0);
+        dup2(fp[1], 1);
+
+        closeReadEnd(ff); closeWriteEnd(fp);
+
+        execlp("bash", "bash", "scripts/script.sh", c, NULL);
+        perror("Error executing script\n");
+        exit(1);
+    }
+
+    // Procesul parinte
+    closeReadEnd(ff); closeWriteEnd(ff); closeWriteEnd(fp);
+
+    char value[10];
+    if (read(fp[0], &value, 10) < 0){
+        perror("Error reading from pipe");
+        exit(-1);
+    }
+    closeReadEnd(fp);
+
+    return strtol(value, NULL, 10);
+}
+
+void linkHandler(char *path, int outputFile){
+    pid_t pid;
+    int exit_value = 0;
+
+    if((pid = fork()) < 0){
+        perror("Error\n");
+        exit(1);
+    }
+    else if(pid == 0){
+        exit_value = getLinkStatistics(path, outputFile);
+        exit(exit_value);
+    }
+}
+
+void directoryHandler(char *path, int outputFile){
+    pid_t pid;
+    int exit_value = 0;
+
+    if((pid = fork()) < 0){
+        perror("Error\n");
+        exit(1);
+    }
+    else if(pid == 0){
+        exit_value = getDirectoryStatistics(path, outputFile);
+        exit(exit_value);
+    }
+}
+
 void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
     struct dirent *directoryContent;
     DIR *directory = openDirectory(inputDirectory);
-    pid_t pid;
     int status;
     int numOfCorrectSentences = 0;
     int numOfCreatedProcesses = 0;
@@ -62,119 +189,31 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
     while((directoryContent = readdir(directory)) != NULL){
         char path[255], fileName[255];
         sprintf(fileName, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt");
-        int outputFile = createFile(fileName), returnValue = 0;
+        int outputFile = createFile(fileName);
         sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name);
     
 
         // If it is BMP file create 2 separate processes and exit with code 10 (num lines)
         if(isBMPFile(path)){
             numOfCreatedProcesses += 2;
-            if((pid = fork()) < 0){
-                perror("Error\n");
-                exit(1);
-            }
-            else if(pid == 0){
-                transformToGrayscale(path);
-                exit(0);
-            }
-
-            if((pid = fork()) < 0){
-                perror("Error\n");
-                exit(1);
-            }
-            else if(pid == 0){
-                int exit_value = getFileStatistics(path, outputFile, 1);
-                exit(exit_value);
-            }
-            
+            bmpHandler(path, outputFile);
         }
         else if(isFile(path)){
-            // Daca e fisier, creez 2 pipeuri (1 pentru comunicare intre cei doi fii si unul de la fiul la parinte)
-            int ff[2];
-            int fp[2];
-
             numOfCreatedProcesses += 2;
-
-            createPipe(ff);
-            createPipe(fp);
-
-            // Primul fiu va scrie fisierul de statistica
-            // Totodata, va scrie in pipe-ul ff continutul fisierului
-
-            if((pid = fork()) < 0){
-                perror("Error\n");
-                exit(1);
-            }
-            else if(pid == 0){
-            
-                close(fp[0]);
-                close(fp[1]);
-                close(ff[0]);
-
-                getFileStatistics(path, outputFile, 0);
-
-                dup2(ff[1], 1);
-                close(ff[1]);
-                execlp("bash", "bash","scripts/lines.sh", path, NULL);
-
-                perror("Error executing cat\n");
-                exit(1);
-            }
-
-            // Acest proces va prii de la celalt fiu prin pipe continutul fisierului si va numara propozitiile corecte
-            // Numarul de propozitii corecte va fi scris in pipe-ul fp - transmis parintelui
-            if((pid = fork()) < 0){
-                perror("Error\n");
-                exit(1);
-            }
-            else if(pid == 0){
-                close(ff[1]);
-                close(fp[0]);
-                dup2(ff[0], 0);
-                dup2(fp[1], 1);
-                close(ff[0]);
-                close(fp[1]);
-
-                execlp("bash", "bash", "scripts/script.sh", c, NULL);
-
-                perror("Error executing script\n");
-                exit(1);
-            }
-
-            // Procesul parinte
-            close(ff[0]);
-            close(ff[1]);
-            close(fp[1]);
-
-            char value[10];
-    
-            if (read(fp[0], &value, 10) > 0)
-                printf("Sunt %ld propozitii corecte\n", strtol(value, NULL, 10));
-
-            numOfCorrectSentences += strtol(value, NULL, 10);
-    
-            close(fp[0]);
-
-
+            numOfCorrectSentences += fileHandler(path, outputFile, c);
         }
         // Else for other files create a single process
-        else if((pid = fork()) < 0){
-            perror("Error\n");
-            exit(1);
-        }
-        else if(pid == 0){
-
+        else if(isLink(path)){
             numOfCreatedProcesses += 1;
-
-            if(isLink(path))
-                returnValue = getLinkStatistics(path, outputFile);
-
-            else if(isDirectory(path))
-                returnValue = getDirectoryStatistics(path, outputFile);
-            
-            close(outputFile);
-            exit(returnValue);
+            linkHandler(path, outputFile);
         }
+
+        else if(isDirectory(path)){
+            numOfCreatedProcesses += 1;
+            directoryHandler(path, outputFile);
+        }    
+        
+        close(outputFile);
     }
 
     // Wait for all processes to end and print PID and exit code
