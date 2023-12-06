@@ -19,7 +19,7 @@ typedef struct imageData{
 }imageData;
 
 void writeFileStatistics(imageData data, int outputFile, int isBMP);
-void getFileStatistics(char *imagePath, int outputFile, int isBMP);
+int getFileStatistics(char *imagePath, int outputFile, int isBMP);
 
 int openFile(char *filePath);
 

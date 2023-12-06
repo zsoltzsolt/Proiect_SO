@@ -171,7 +171,7 @@ void writeFileStatistics(imageData data, int outputFile, int isImage){
 
 
 
-void getFileStatistics(char *imagePath, int outputFile, int isImage){
+int getFileStatistics(char *imagePath, int outputFile, int isImage){
 
     struct stat fileStat = getFileStat(imagePath);
     imageData data;
@@ -202,6 +202,8 @@ void getFileStatistics(char *imagePath, int outputFile, int isImage){
     writeFileStatistics(data, outputFile, isImage);
 
     closeFile(image);
+
+    return 8 + 2*isImage;
 
 }
 

@@ -47,7 +47,7 @@ void printLinkStatistics(linkData data, int outputFile){
 
 }
 
-void getLinkStatistics(char *linkPath, int outputFile){
+int getLinkStatistics(char *linkPath, int outputFile){
 
     struct stat linkStat;
     struct stat targetStat;
@@ -75,6 +75,8 @@ void getLinkStatistics(char *linkPath, int outputFile){
     strcpy(data.rights.othersRights, getOtherRights(linkStat));
 
     printLinkStatistics(data, outputFile);
+
+    return 6;
 
 }
 

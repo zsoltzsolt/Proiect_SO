@@ -15,7 +15,7 @@ void closeDirectory(DIR *directory);
 
 int isDirectory(char *path);
 
-void getDirectoryStatistics(char *directoryPath, int outputFile);
+int getDirectoryStatistics(char *directoryPath, int outputFile);
 
 
 #endif

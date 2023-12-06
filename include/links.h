@@ -10,7 +10,7 @@ typedef struct linkData{
     rights rights;
 }linkData;
 
-void getLinkStatistics(char *linkPath, int outputFile);
+int getLinkStatistics(char *linkPath, int outputFile);
 int isLink(char *path);
 
 #endif
