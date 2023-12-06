@@ -12,6 +12,7 @@
 #include "./include/links.h"
 #include <dirent.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #define MAX_PROCESS_NUM 255
 
@@ -155,14 +156,14 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
             close(ff[1]);
             close(fp[1]);
 
-            char value = 0;
+            char value[10];
     
-            if (read(fp[0], &value, sizeof(char)) > 0)
+            if (read(fp[0], &value, 10) > 0)
             {
-                printf("Sunt %d propozitii corecte\n", value-48);
+                printf("Sunt %ld propozitii corecte\n", strtol(value, NULL, 10));
             }
 
-            nrPropozitiiCorecte += (value-48);
+            nrPropozitiiCorecte += strtol(value, NULL, 10);
     
             close(fp[0]);
             

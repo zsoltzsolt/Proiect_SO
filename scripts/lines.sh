@@ -1,3 +1,3 @@
 
-bash cat $1
+cat $1
 exit 8
