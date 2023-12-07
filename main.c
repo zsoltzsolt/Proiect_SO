@@ -175,21 +175,28 @@ void directoryHandler(char *path, char *outputPath){
     }
 }
 
+void waitProcesses(int numOfCreatedProcesses){
+    int status;
+    for(int j = 0; j < numOfCreatedProcesses; ++j){
+        int wpid = wait(&status);
+        if(WIFEXITED(status))
+            printf("S-a incheiat procesul cu PID-ul %d si codul %d\n", wpid, WEXITSTATUS(status));
+    }
+}
+
 void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
     struct dirent *directoryContent;
     DIR *directory = openDirectory(inputDirectory);
-    int status;
     int numOfCorrectSentences = 0;
     int numOfCreatedProcesses = 0;
 
-    readdir(directory);
-    readdir(directory);
+    readdir(directory); readdir(directory); // Skip . and ..
 
     while((directoryContent = readdir(directory)) != NULL){
         char path[255], outputPath[255];
-        sprintf(outputPath, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt");
-        sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name);
+        sprintf(outputPath, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt"); // Construct output path
+        sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name); // Construct current file path
     
 
         // If it is BMP file create 2 separate processes and exit with code 10 (num lines)
@@ -214,11 +221,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
     }
 
     // Wait for all processes to end and print PID and exit code
-    for(int j = 0; j < numOfCreatedProcesses; ++j){
-        int wpid = wait(&status);
-        if(WIFEXITED(status))
-            printf("S-a incheiat procesul cu PID-ul %d si codul %d\n", wpid, WEXITSTATUS(status));
-    }
+    waitProcesses(numOfCreatedProcesses);
 
     printf("Au fost identificate in total %d propozitii corecte care contin caracterul %c\n", numOfCorrectSentences, c[0]);
 
@@ -229,6 +232,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 int main(int argc, char **argv){
 
     verifyInputArguments(argc, argv);
+    
     scanDirectory(argv[1], argv[2], argv[3]);
 
     return 0;
