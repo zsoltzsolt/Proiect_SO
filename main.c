@@ -101,12 +101,14 @@ int fileHandler(char *path, char *outputPath, char *c){
         closeWriteEnd(fp);
         closeReadEnd(ff);
 
-        getFileStatistics(path, outputPath, 0);
+        int numberOfLines = getFileStatistics(path, outputPath, 0);
+        char numberOfLinesString[10];
+        sprintf(numberOfLinesString, "%d", numberOfLines);
 
         dup2(ff[1], 1);
         closeWriteEnd(ff);
 
-        execlp("bash", "bash","scripts/lines.sh", path, NULL);
+        execlp("bash", "bash","scripts/lines.sh", path, numberOfLinesString, NULL);
         perror("Error executing cat\n");
         exit(1);
     }
@@ -215,7 +217,6 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
             directoryHandler(path, outputPath);
         }    
     }
-
     // Wait for all processes to end and print PID and exit code
     waitProcesses(numOfCreatedProcesses);
 

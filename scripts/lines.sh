@@ -1,9 +1,9 @@
 
-# Se verifica daca a primit exact un argument
-if test $# -ne 1
+# We need 2 arguments: file name and number of lines
+if test $# -ne 2
     then
         echo "Invalid number of arguments"
     else 
         cat $1
 fi
-exit 8
+exit $2
