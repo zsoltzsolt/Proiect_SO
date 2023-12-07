@@ -19,8 +19,6 @@ typedef struct fileData{
     rights rights;
 }fileData;
 
-void writeFileStatistics(fileData data, int outputFile, int isBMP);
-
 int getFileStatistics(char *imagePath, char *outputFile, int isBMP);
 
 int openFile(char *filePath);

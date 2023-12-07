@@ -11,7 +11,6 @@
 #define BUFFER_SIZE 4096
 
 int endsWithBMP(char *name){
-
     char extension[5];
     int lenght = strlen(name);
 
@@ -22,14 +21,12 @@ int endsWithBMP(char *name){
     // We extract last 4 characters
     for(int i = 0 ; i < 4; ++i)
         extension[i] = name[lenght - 4 + i];
-
     extension[4] = '\0';
 
     return !strcmp(extension, ".bmp");
 }
 
 int isBMPFile(char *filePath){
-
     struct stat fileStat = getFileStat(filePath);
 
     if(S_ISREG(fileStat.st_mode) && endsWithBMP(filePath))
@@ -39,7 +36,6 @@ int isBMPFile(char *filePath){
 }
 
 int getImageHeight(int imageDescriptor){
-
     int height;
 
     lseek(imageDescriptor, 22, SEEK_SET);
@@ -53,7 +49,6 @@ int getImageHeight(int imageDescriptor){
 }
 
 int getImageWidth(int imageDescriptor){
-
     int width;
 
     lseek(imageDescriptor, 18, SEEK_SET);
@@ -87,7 +82,7 @@ void modifyColorTable(int imageDescriptor, int bitsCount){
 
 void modifyRasterData(int imageDescriptor, int dataOffset){
     int n, red, green, blue, new_value;
-    char buffer[4096];
+    char buffer[BUFFER_SIZE];
     // Move our cursor at the begining of RasterData
     lseek(imageDescriptor, dataOffset, SEEK_SET);
     // Read a chunk of RGB values (3 for each pixel)
@@ -123,8 +118,8 @@ void transformToGrayscale(char *imagePath){
 
     lseek(imageDescriptor, 28, SEEK_SET);
 
-    if(read(imageDescriptor, &bitsCount, 4) != 4){
-        perror("Failed to get dataOffset");
+    if(read(imageDescriptor, &bitsCount, 2) != 2){
+        perror("Failed to get bitsCount");
         exit(-1);
     }
 

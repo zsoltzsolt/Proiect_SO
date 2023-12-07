@@ -19,16 +19,13 @@ int directoryExists(char *path){
 }
 
 void createDirectory(char *path){
-
     if(mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)){
         perror("Error creating directory");
         exit(-1);
     }
-
 }
 
 DIR *openDirectory(char *path){
-    
     DIR *directory;
 
     if((directory = opendir(path)) == NULL){
@@ -37,20 +34,16 @@ DIR *openDirectory(char *path){
     }
 
     return directory;
-
 }
 
 void closeDirectory(DIR *directory){
-
     if(closedir(directory)){
         perror("Error while closing directory");
         exit(-1);
     }
-
 }
 
 int isDirectory(char *path){
-
     struct stat fileStat;
 
     if(lstat(path, &fileStat)){
@@ -59,11 +52,9 @@ int isDirectory(char *path){
     }
 
     return S_ISDIR(fileStat.st_mode);
-
 }
 
 void printDirectoryStatistics(fileData data, char *outputPath){
-
     char string[BUFFER_SIZE];
     int outputFile = createFile(outputPath);
 
@@ -76,11 +67,9 @@ void printDirectoryStatistics(fileData data, char *outputPath){
 
     write(outputFile, string, strlen(string));
     closeFile(outputFile);
-
 }
 
 int getDirectoryStatistics(char *directoryPath, char *outputPath){
-
     struct stat fileStat;
     fileData data;
 

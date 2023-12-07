@@ -11,7 +11,6 @@
 #define BUFFER_SIZE 1024
 
 int createFile(char *filePath){
-
     int file = 0;
 
     if((file = open(filePath, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) < 0){
@@ -20,11 +19,9 @@ int createFile(char *filePath){
     }
 
     return file;
-
 }
 
 int openFile(char *filePath){
-
     int file = 0;
 
     if((file = open(filePath, O_RDWR)) < 0){
@@ -33,33 +30,24 @@ int openFile(char *filePath){
     }
 
     return file;
-
 }
 
 void closeFile(int fileDescriptor){
-
     if(close(fileDescriptor)){
         perror("Eroare inchidere fisier");
         exit(-1);
     }
-
 }
 
 int isFile(char *filePath){
-
     struct stat fileStat;
 
     lstat(filePath, &fileStat);
 
-    if(S_ISREG(fileStat.st_mode))
-        return 1;
-
-    return 0;
-
+    return S_ISREG(fileStat.st_mode);
 }
 
 struct stat getFileStat(char *path){
-
     struct stat fileStat;
 
     if(lstat(path, &fileStat)){
@@ -68,27 +56,21 @@ struct stat getFileStat(char *path){
     }
 
     return fileStat;
-
 }
 
 
 char *getModificationDate(struct stat fileStat){
-
     static char modificationDate[256];
-
     struct tm *timeNow = localtime(&fileStat.st_mtimespec.tv_sec);
 
     // We convert modification date to dd/mm/yyyy format
     strftime(modificationDate, 10, "%d.%m.%Y", timeNow);
 
     return modificationDate;
-
 }
 
 char *getUserRights(struct stat fileStat){
-
     static char rights[4];
-
     int mode = fileStat.st_mode;
 
     rights[0] = (S_IRUSR & mode) ? 'R' : '-';
@@ -97,13 +79,10 @@ char *getUserRights(struct stat fileStat){
     rights[3] = '\0';
 
     return rights;
-
 }
 
 char *getGroupRights(struct stat fileStat){
-
     static char rights[4];
-
     int mode = fileStat.st_mode;
 
     rights[0] = (S_IRGRP & mode) ? 'R' : '-';
@@ -112,13 +91,10 @@ char *getGroupRights(struct stat fileStat){
     rights[3] = '\0';
 
     return rights;
-
 }
 
 char *getOtherRights(struct stat fileStat){
-
     static char rights[4];
-
     int mode = fileStat.st_mode;
 
     rights[0] = (S_IROTH & mode) ? 'R' : '-';
@@ -127,12 +103,11 @@ char *getOtherRights(struct stat fileStat){
     rights[3] = '\0';
 
     return rights;
-
 }
 
-void writeFileStatistics(fileData data, int outputFile, int isImage){
-    
+void writeFileStatistics(fileData data, char *outputPath, int isImage){
     char buffer[BUFFER_SIZE];
+    int outputFile = createFile(outputPath);
 
     sprintf(buffer, "nume fisier: %s\n", data.name);
     write(outputFile, buffer, strlen(buffer));
@@ -155,7 +130,7 @@ void writeFileStatistics(fileData data, int outputFile, int isImage){
         data.size, data.links, data.uid, data.date, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
 
     write(outputFile, buffer, strlen(buffer));
-
+    closeFile(outputFile);
 }
 
 
@@ -165,7 +140,6 @@ int getFileStatistics(char *imagePath, char *outputPath, int isImage){
     struct stat fileStat = getFileStat(imagePath);
     fileData data;
     int image = openFile(imagePath);
-    int outputFile = createFile(outputPath);
 
     strcpy(data.name, imagePath);
     
@@ -189,12 +163,10 @@ int getFileStatistics(char *imagePath, char *outputPath, int isImage){
 
     data.date = getModificationDate(fileStat);
 
-    writeFileStatistics(data, outputFile, isImage);
+    writeFileStatistics(data, outputPath, isImage);
 
     closeFile(image);
-    closeFile(outputFile);
 
     return (8 + 2*isImage);
-
 }
 

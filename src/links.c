@@ -10,8 +10,8 @@
 
 int isLink(char *path){
 
-    struct stat fileStat = getFileStat(path);
-    struct stat targetStat;
+    struct stat targetStat, fileStat;
+    fileStat = getFileStat(path);
     
     // targetStat cresponds to metadata about the ACTUAL file
     if(stat(path, &targetStat)){
@@ -21,12 +21,10 @@ int isLink(char *path){
 
     if(S_ISLNK(fileStat.st_mode) && S_ISREG(targetStat.st_mode))
         return 1;
-
     return 0;
 }
 
 void printLinkStatistics(fileData data, char *outputPath){
-    
     char buffer[BUFFER_SIZE];
     int outputFile = createFile(outputPath);
 
@@ -39,18 +37,13 @@ void printLinkStatistics(fileData data, char *outputPath){
         data.name, data.size, data.targetSize, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
 
     write(outputFile, buffer, strlen(buffer));
-
 }
 
 int getLinkStatistics(char *linkPath, char *outputPath){
-
-    struct stat linkStat;
-    struct stat targetStat;
+    struct stat linkStat, targetStat;
     fileData data;
-
     // linkStat coresponds to metadata about LINK
     linkStat = getFileStat(linkPath);
-    
     // targetStat cresponds to metadata about the ACTUAL file
     if(stat(linkPath, &targetStat)){
         perror("Error fetching file stat1");
@@ -72,7 +65,6 @@ int getLinkStatistics(char *linkPath, char *outputPath){
     printLinkStatistics(data, outputPath);
 
     return 6;
-
 }
 
 

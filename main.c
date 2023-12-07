@@ -16,23 +16,22 @@
 
 #define MAX_PROCESS_NUM 255
 
-
 void verifyInputArguments(int argc, char **argv){
 
-    if(argc != 4){
+    if(argc != 4){ // We need 4 arguments (program name, input directory, output directory, character)
         perror("Invalid number of arguments!");
         exit(-1);
     }
 
-    if(isDirectory(argv[1]) == 0){
+    if(isDirectory(argv[1]) == 0){ // Input directory must exist and must be a directory
         perror("First argument is not a directory");
         exit(-1);
     }
 
-    if(directoryExists(argv[2]) == 0)
+    if(directoryExists(argv[2]) == 0) // If output directory does not exist, create it
         createDirectory(argv[2]);
 
-    if((strlen(argv[3]) != 1) || (isalnum(argv[3][0]) == 0)){
+    if((strlen(argv[3]) != 1) || (isalnum(argv[3][0]) == 0)){ // Third argument must be a single alphanumeric character
         perror("Third argument is not a alphanumeric character");
         exit(-1);
     }
@@ -61,7 +60,6 @@ void closeWriteEnd(int *pipefd){
 }
 
 void bmpHandler(char *path, char *outputPath){
-
     pid_t pid;
 
     if((pid = fork()) < 0){
@@ -196,7 +194,6 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
         char path[255], outputPath[255];
         sprintf(outputPath, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt"); // Construct output path
         sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name); // Construct current file path
-    
 
         // If it is BMP file create 2 separate processes and exit with code 10 (num lines)
         if(isBMPFile(path)){
