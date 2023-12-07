@@ -3,12 +3,6 @@
 
 #include "file.h"
 
-typedef struct directoryData{
-    char directoryName[255];
-    int uid;
-    rights rights;
-}directoryData;
-
 DIR *openDirectory(char *path);
 
 void closeDirectory(DIR *directory);

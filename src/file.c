@@ -8,6 +8,8 @@
 #include "../include/file.h"
 #include "../include/bmp.h"
 
+#define BUFFER_SIZE 1024
+
 int createFile(char *filePath){
 
     int file = 0;
@@ -128,43 +130,30 @@ char *getOtherRights(struct stat fileStat){
 
 }
 
-
-
-void writeFileStatistics(imageData data, int outputFile, int isImage){
+void writeFileStatistics(fileData data, int outputFile, int isImage){
     
-    char buffer[255];
+    char buffer[BUFFER_SIZE];
 
-    sprintf(buffer, "nume fisier: %s\n", data.imageName);
+    sprintf(buffer, "nume fisier: %s\n", data.name);
     write(outputFile, buffer, strlen(buffer));
 
     // Image height and width is displayed only for bmp images
     if(isImage){
-        sprintf(buffer, "inaltime: %d\n", data.height);
-        write(outputFile, buffer, strlen(buffer));
-
-        sprintf(buffer, "latime: %d\n", data.width);
+        sprintf(buffer, "inaltime: %d\n"
+                         "latime: %d\n", 
+                         data.height, data.width);
         write(outputFile, buffer, strlen(buffer));
     }
 
-    sprintf(buffer, "dimensiune: %d octeti\n", data.size);
-    write(outputFile, buffer, strlen(buffer));
+    sprintf(buffer, "dimensiune: %d octeti\n"
+                    "numar legaturi: %d\n"
+                    "identificatorul utilizatorului: %d\n"
+                    "timpul ultimei modificari: %s\n"
+                    "drepturi de accces user: %s\n"
+                    "drepturi de accces grup: %s\n"
+                    "drepturi de accces altii: %s\n",
+        data.size, data.links, data.uid, data.date, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
 
-    sprintf(buffer, "numar legaturi: %d\n", data.links);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "identificatorul utilizatorului: %d\n", data.uid);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "timpul ultimei modificari: %s\n", data.date);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "drepturi de accces user: %s\n", data.imageRights.userRights);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "drepturi de accces grup: %s\n", data.imageRights.groupRights);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "drepturi de accces altii: %s\n", data.imageRights.othersRights);
     write(outputFile, buffer, strlen(buffer));
 
 }
@@ -174,10 +163,10 @@ void writeFileStatistics(imageData data, int outputFile, int isImage){
 int getFileStatistics(char *imagePath, int outputFile, int isImage){
 
     struct stat fileStat = getFileStat(imagePath);
-    imageData data;
+    fileData data;
     int image = openFile(imagePath);
 
-    strcpy(data.imageName, imagePath);
+    strcpy(data.name, imagePath);
     
     data.size = fileStat.st_size;
 
@@ -189,11 +178,11 @@ int getFileStatistics(char *imagePath, int outputFile, int isImage){
 
     data.links = fileStat.st_nlink;
 
-    strcpy(data.imageRights.userRights, getUserRights(fileStat));
+    strcpy(data.rights.userRights, getUserRights(fileStat));
 
-    strcpy(data.imageRights.groupRights, getGroupRights(fileStat));
+    strcpy(data.rights.groupRights, getGroupRights(fileStat));
 
-    strcpy(data.imageRights.othersRights, getOtherRights(fileStat));
+    strcpy(data.rights.othersRights, getOtherRights(fileStat));
 
     data.uid = fileStat.st_uid;
 

@@ -7,18 +7,20 @@ typedef struct rights{
     char othersRights[4];
 }rights;
 
-typedef struct imageData{
-    char imageName[255];
+typedef struct fileData{
+    char name[255];
     int height;
     int width;
     int size;
+    int targetSize;
     char *date;
     int uid;
     int links;
-    rights imageRights;
-}imageData;
+    rights rights;
+}fileData;
 
-void writeFileStatistics(imageData data, int outputFile, int isBMP);
+void writeFileStatistics(fileData data, int outputFile, int isBMP);
+
 int getFileStatistics(char *imagePath, int outputFile, int isBMP);
 
 int openFile(char *filePath);

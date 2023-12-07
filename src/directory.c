@@ -7,6 +7,8 @@
 #include "../include/directory.h"
 #include "../include/file.h"
 
+#define BUFFER_SIZE 1024
+
 
 DIR *openDirectory(char *path){
     
@@ -43,36 +45,29 @@ int isDirectory(char *path){
 
 }
 
-void printDirectoryStatistics(directoryData data, int outputFile){
+void printDirectoryStatistics(fileData data, int outputFile){
 
-    char string[255];
+    char string[BUFFER_SIZE];
 
-    sprintf(string, "nume director: %s\n", data.directoryName);
+    sprintf(string, "nume director: %s\n"
+                "identificatorul utilizatorului: %d\n"
+                "drepturi de access user: %s\n"
+                "drepturi de access grup: %s\n"
+                "drepturi de access altii: %s\n",
+        data.name, data.uid, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
+
     write(outputFile, string, strlen(string));
-
-    sprintf(string, "identificatorul utilizatorului: %d\n", data.uid);
-    write(outputFile, string, strlen(string));
-
-    sprintf(string, "drepturi de access user: %s\n", data.rights.userRights);
-    write(outputFile, string, strlen(string));
-
-    sprintf(string, "drepturi de access grup: %s\n", data.rights.groupRights);
-    write(outputFile, string, strlen(string));
-
-    sprintf(string, "drepturi de access altii: %s\n", data.rights.othersRights);
-    write(outputFile, string, strlen(string));
-
 
 }
 
 int getDirectoryStatistics(char *directoryPath, int outputFile){
 
     struct stat fileStat;
-    directoryData data;
+    fileData data;
 
     fileStat = getFileStat(directoryPath);
 
-    strcpy(data.directoryName, directoryPath);
+    strcpy(data.name, directoryPath);
 
     data.uid = fileStat.st_uid;
 
@@ -85,6 +80,4 @@ int getDirectoryStatistics(char *directoryPath, int outputFile){
     printDirectoryStatistics(data, outputFile);
 
     return 5;
-
-
 }
