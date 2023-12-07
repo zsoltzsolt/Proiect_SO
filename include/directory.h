@@ -6,6 +6,10 @@ DIR *openDirectory(char *path);
 
 void closeDirectory(DIR *directory);
 
+int directoryExists(char *path);
+
+void createDirectory(char *path);
+
 int isDirectory(char *path);
 
 int getDirectoryStatistics(char *directoryPath, char *outputFile);

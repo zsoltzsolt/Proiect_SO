@@ -25,9 +25,10 @@ int isLink(char *path){
     return 0;
 }
 
-void printLinkStatistics(fileData data, int outputFile){
+void printLinkStatistics(fileData data, char *outputPath){
     
     char buffer[BUFFER_SIZE];
+    int outputFile = createFile(outputPath);
 
     sprintf(buffer, "nume legatura: %s\n"
                 "dimensiune legatura: %d\n"
@@ -46,8 +47,6 @@ int getLinkStatistics(char *linkPath, char *outputPath){
     struct stat linkStat;
     struct stat targetStat;
     fileData data;
-
-    int outputFile = openFile(outputPath);
 
     // linkStat coresponds to metadata about LINK
     linkStat = getFileStat(linkPath);
@@ -70,9 +69,7 @@ int getLinkStatistics(char *linkPath, char *outputPath){
 
     strcpy(data.rights.othersRights, getOtherRights(linkStat));
 
-    printLinkStatistics(data, outputFile);
-
-    closeFile(outputFile);
+    printLinkStatistics(data, outputPath);
 
     return 6;
 

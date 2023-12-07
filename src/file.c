@@ -28,7 +28,7 @@ int openFile(char *filePath){
     int file = 0;
 
     if((file = open(filePath, O_RDWR)) < 0){
-        perror("Error while opening file");
+        printf("Error while opening file %s\n ", filePath);
         exit(-1);
     }
 

@@ -8,7 +8,7 @@
 #include<math.h>
 #include <stdio.h>
 
-#define BUFFER_SIZE 1200
+#define BUFFER_SIZE 4096
 
 int endsWithBMP(char *name){
 
@@ -26,7 +26,6 @@ int endsWithBMP(char *name){
     extension[4] = '\0';
 
     return !strcmp(extension, ".bmp");
- 
 }
 
 int isBMPFile(char *filePath){
@@ -37,7 +36,6 @@ int isBMPFile(char *filePath){
         return 1;
 
     return 0;
-
 }
 
 int getImageHeight(int imageDescriptor){
@@ -52,7 +50,6 @@ int getImageHeight(int imageDescriptor){
     }
 
     return height;
-
 }
 
 int getImageWidth(int imageDescriptor){
@@ -67,59 +64,43 @@ int getImageWidth(int imageDescriptor){
     }
 
     return width;
-
 }
 
 void modifyColorTable(int imageDescriptor, int bitsCount){
-
+    int n, red, green, blue, new_value, count = 0;
+    char buffer[4];
     lseek(imageDescriptor, 54, SEEK_SET);
-    int n, red, green, blue, new_value;
-    char buffer[10];
-    int count = 0;
-    
+    // Color table contains 2^bitsCount entries
     while(count < pow(2,bitsCount) && (n = read(imageDescriptor, buffer, 4)) > 0){
-        lseek(imageDescriptor, -n, SEEK_CUR);
-
+        lseek(imageDescriptor, -n, SEEK_CUR); // Move cursor back so we can overwrite RGB values
+        
         count += 1;
-        red = buffer[0];
-        green = buffer[1];
-        blue = buffer[2];
+        red = buffer[0]; green = buffer[1]; blue = buffer[2];
 
         new_value = red * .299f + green * .587f + blue * .144f;
 
-        buffer[0] = new_value;
-        buffer[1] = new_value;
-        buffer[2] = new_value;
-
-        // Overwrite RGB values
-        write(imageDescriptor, buffer, 4);
+        buffer[0] = buffer[1] = buffer[2] = new_value;
+        
+        write(imageDescriptor, buffer, 4);// Overwrite RGB values
     }
-
 }
 
 void modifyRasterData(int imageDescriptor, int dataOffset){
     int n, red, green, blue, new_value;
-    char buffer[4000];
-
+    char buffer[4096];
     // Move our cursor at the begining of RasterData
     lseek(imageDescriptor, dataOffset, SEEK_SET);
-    
     // Read a chunk of RGB values (3 for each pixel)
     while((n = read(imageDescriptor, buffer, BUFFER_SIZE)) > 0){
         // Move cursor back where we read current values in buffer
         lseek(imageDescriptor, -n, SEEK_CUR);
         // For each pixel we have 3 values so we work on 3 bytes at each iteration
         for(int i = 0; i + 2 < n; i += 3){
-            red = buffer[i];
-            green = buffer[i+1];
-            blue = buffer[i+2];
+            red = buffer[i]; green = buffer[i+1]; blue = buffer[i+2];
 
             new_value = red * .299f + green * .587f + blue * .144f;
 
-            buffer[i] = new_value;
-            buffer[i+1] = new_value;
-            buffer[i+2] = new_value;
-
+            buffer[i] = buffer[i+1] = buffer[i+2] = new_value;
         }
         // Overwrite RGB values
         write(imageDescriptor, buffer, n);
@@ -153,6 +134,5 @@ void transformToGrayscale(char *imagePath){
         modifyRasterData(imageDescriptor, dataOffset);
 
     closeFile(imageDescriptor);
-
 }
 

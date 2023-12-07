@@ -16,6 +16,7 @@
 
 #define MAX_PROCESS_NUM 255
 
+
 void verifyInputArguments(int argc, char **argv){
 
     if(argc != 4){
@@ -28,10 +29,8 @@ void verifyInputArguments(int argc, char **argv){
         exit(-1);
     }
 
-    if(isDirectory(argv[2]) == 0){
-        perror("Second argument is not a directory");
-        exit(-1);
-    }
+    if(directoryExists(argv[2]) == 0)
+        createDirectory(argv[2]);
 
     if((strlen(argv[3]) != 1) || (isalnum(argv[3][0]) == 0)){
         perror("Third argument is not a alphanumeric character");

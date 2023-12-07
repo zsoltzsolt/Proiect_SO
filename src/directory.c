@@ -9,6 +9,23 @@
 
 #define BUFFER_SIZE 1024
 
+int directoryExists(char *path){
+    struct stat fileStat;
+
+    if(lstat(path, &fileStat))
+        return 0;
+
+    return S_ISDIR(fileStat.st_mode);
+}
+
+void createDirectory(char *path){
+
+    if(mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)){
+        perror("Error creating directory");
+        exit(-1);
+    }
+
+}
 
 DIR *openDirectory(char *path){
     
@@ -45,9 +62,10 @@ int isDirectory(char *path){
 
 }
 
-void printDirectoryStatistics(fileData data, int outputFile){
+void printDirectoryStatistics(fileData data, char *outputPath){
 
     char string[BUFFER_SIZE];
+    int outputFile = createFile(outputPath);
 
     sprintf(string, "nume director: %s\n"
                 "identificatorul utilizatorului: %d\n"
@@ -57,6 +75,7 @@ void printDirectoryStatistics(fileData data, int outputFile){
         data.name, data.uid, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
 
     write(outputFile, string, strlen(string));
+    closeFile(outputFile);
 
 }
 
@@ -64,8 +83,6 @@ int getDirectoryStatistics(char *directoryPath, char *outputPath){
 
     struct stat fileStat;
     fileData data;
-
-    int outputFile = openFile(outputPath);
 
     fileStat = getFileStat(directoryPath);
 
@@ -79,9 +96,7 @@ int getDirectoryStatistics(char *directoryPath, char *outputPath){
 
     strcpy(data.rights.othersRights, getOtherRights(fileStat));
 
-    printDirectoryStatistics(data, outputFile);
-
-    closeFile(outputFile);
+    printDirectoryStatistics(data, outputPath);
 
     return 5;
 }
