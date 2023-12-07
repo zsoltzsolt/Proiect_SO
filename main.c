@@ -61,7 +61,7 @@ void closeWriteEnd(int *pipefd){
     }
 }
 
-void bmpHandler(char *path, int outputFile){
+void bmpHandler(char *path, char *outputPath){
 
     pid_t pid;
 
@@ -79,12 +79,12 @@ void bmpHandler(char *path, int outputFile){
         exit(1);
     }
     else if(pid == 0){
-        int exit_value = getFileStatistics(path, outputFile, 1);
+        int exit_value = getFileStatistics(path, outputPath, 1);
         exit(exit_value);
     }
 }
 
-int fileHandler(char *path, int outputFile, char *c){
+int fileHandler(char *path, char *outputPath, char *c){
     pid_t pid;
     // Daca e fisier, creez 2 pipeuri (1 pentru comunicare intre cei doi fii si unul de la fiul la parinte)
     int ff[2];
@@ -104,7 +104,7 @@ int fileHandler(char *path, int outputFile, char *c){
         closeWriteEnd(fp);
         closeReadEnd(ff);
 
-        getFileStatistics(path, outputFile, 0);
+        getFileStatistics(path, outputPath, 0);
 
         dup2(ff[1], 1);
         closeWriteEnd(ff);
@@ -147,7 +147,7 @@ int fileHandler(char *path, int outputFile, char *c){
     return strtol(value, NULL, 10);
 }
 
-void linkHandler(char *path, int outputFile){
+void linkHandler(char *path, char *outputPath){
     pid_t pid;
     int exit_value = 0;
 
@@ -156,12 +156,12 @@ void linkHandler(char *path, int outputFile){
         exit(1);
     }
     else if(pid == 0){
-        exit_value = getLinkStatistics(path, outputFile);
+        exit_value = getLinkStatistics(path, outputPath);
         exit(exit_value);
     }
 }
 
-void directoryHandler(char *path, int outputFile){
+void directoryHandler(char *path, char *outputPath){
     pid_t pid;
     int exit_value = 0;
 
@@ -170,7 +170,7 @@ void directoryHandler(char *path, int outputFile){
         exit(1);
     }
     else if(pid == 0){
-        exit_value = getDirectoryStatistics(path, outputFile);
+        exit_value = getDirectoryStatistics(path, outputPath);
         exit(exit_value);
     }
 }
@@ -187,33 +187,30 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
     readdir(directory);
 
     while((directoryContent = readdir(directory)) != NULL){
-        char path[255], fileName[255];
-        sprintf(fileName, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt");
-        int outputFile = createFile(fileName);
+        char path[255], outputPath[255];
+        sprintf(outputPath, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt");
         sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name);
     
 
         // If it is BMP file create 2 separate processes and exit with code 10 (num lines)
         if(isBMPFile(path)){
             numOfCreatedProcesses += 2;
-            bmpHandler(path, outputFile);
+            bmpHandler(path, outputPath);
         }
         else if(isFile(path)){
             numOfCreatedProcesses += 2;
-            numOfCorrectSentences += fileHandler(path, outputFile, c);
+            numOfCorrectSentences += fileHandler(path, outputPath, c);
         }
         // Else for other files create a single process
         else if(isLink(path)){
             numOfCreatedProcesses += 1;
-            linkHandler(path, outputFile);
+            linkHandler(path, outputPath);
         }
 
         else if(isDirectory(path)){
             numOfCreatedProcesses += 1;
-            directoryHandler(path, outputFile);
+            directoryHandler(path, outputPath);
         }    
-        
-        close(outputFile);
     }
 
     // Wait for all processes to end and print PID and exit code

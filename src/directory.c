@@ -60,10 +60,12 @@ void printDirectoryStatistics(fileData data, int outputFile){
 
 }
 
-int getDirectoryStatistics(char *directoryPath, int outputFile){
+int getDirectoryStatistics(char *directoryPath, char *outputPath){
 
     struct stat fileStat;
     fileData data;
+
+    int outputFile = openFile(outputPath);
 
     fileStat = getFileStat(directoryPath);
 
@@ -78,6 +80,8 @@ int getDirectoryStatistics(char *directoryPath, int outputFile){
     strcpy(data.rights.othersRights, getOtherRights(fileStat));
 
     printDirectoryStatistics(data, outputFile);
+
+    closeFile(outputFile);
 
     return 5;
 }

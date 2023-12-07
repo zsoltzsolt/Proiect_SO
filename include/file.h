@@ -21,7 +21,7 @@ typedef struct fileData{
 
 void writeFileStatistics(fileData data, int outputFile, int isBMP);
 
-int getFileStatistics(char *imagePath, int outputFile, int isBMP);
+int getFileStatistics(char *imagePath, char *outputFile, int isBMP);
 
 int openFile(char *filePath);
 
