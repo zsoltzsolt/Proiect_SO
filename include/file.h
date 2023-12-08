@@ -39,5 +39,4 @@ char *getOtherRights(struct stat fileStat);
 
 struct stat getFileStat(char *path);
 
-
 #endif

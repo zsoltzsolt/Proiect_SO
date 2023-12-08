@@ -28,8 +28,10 @@ void verifyInputArguments(int argc, char **argv){
         exit(-1);
     }
 
-    if(directoryExists(argv[2]) == 0) // If output directory does not exist, create it
-        createDirectory(argv[2]);
+    if(isDirectory(argv[2]) == 0){ // Output directory must exist and must be a directory
+        perror("First argument is not a directory");
+        exit(-1);
+    }
 
     if((strlen(argv[3]) != 1) || (isalnum(argv[3][0]) == 0)){ // Third argument must be a single alphanumeric character
         perror("Third argument is not a alphanumeric character");
@@ -45,68 +47,48 @@ void createPipe(int *pipefd){
     }
 }
 
-void closeReadEnd(int *pipefd){
-    if(close(pipefd[0]) < 0){
-        perror("Error closing pipe");
-        exit(-1);
-    }
-}
-
-void closeWriteEnd(int *pipefd){
-    if(close(pipefd[1]) < 0){
-        perror("Error closing pipe");
-        exit(-1);
-    }
-}
-
 void bmpHandler(char *path, char *outputPath){
     pid_t pid;
 
-    if((pid = fork()) < 0){
+    if((pid = fork()) < 0){ // First child will transform the image to grayscale
         perror("Error\n");
             exit(1);
     }
     else if(pid == 0){
         transformToGrayscale(path);
-        exit(0);
+        exit(0); // Exit with code 0 (success)
     }
 
-    if((pid = fork()) < 0){
+    if((pid = fork()) < 0){ // Second child will write the statistics
         perror("Error\n");
         exit(1);
     }
     else if(pid == 0){
         int exit_value = getFileStatistics(path, outputPath, 1);
-        exit(exit_value);
+        exit(exit_value);  // 
     }
 }
 
 int fileHandler(char *path, char *outputPath, char *c){
     pid_t pid;
-    // Daca e fisier, creez 2 pipeuri (1 pentru comunicare intre cei doi fii si unul de la fiul la parinte)
-    int ff[2];
-    int fp[2];
-
+    int ff[2], fp[2];
+    // We have 2 pipes: ff - for file content, fp - for number of correct sentences
     createPipe(ff);
     createPipe(fp);
-
-    // Primul fiu va scrie fisierul de statistica
-    // Totodata, va scrie in pipe-ul ff continutul fisierului
+    // First child will create statistics file and write the content of the initial file in pipe ff
     if((pid = fork()) < 0){
         perror("Error\n");
         exit(1);
     }
     else if(pid == 0){
-        closeReadEnd(fp);
-        closeWriteEnd(fp);
-        closeReadEnd(ff);
+        close(ff[0]); close(fp[0]); close(fp[1]);
 
         int numberOfLines = getFileStatistics(path, outputPath, 0);
         char numberOfLinesString[10];
-        sprintf(numberOfLinesString, "%d", numberOfLines);
+        sprintf(numberOfLinesString, "%d", numberOfLines); // Convert number of lines to string to be passed as argument
 
         dup2(ff[1], 1);
-        closeWriteEnd(ff);
+        close(ff[1]);
 
         execlp("bash", "bash","scripts/lines.sh", path, numberOfLinesString, NULL);
         perror("Error executing cat\n");
@@ -120,57 +102,55 @@ int fileHandler(char *path, char *outputPath, char *c){
         exit(1);
     }
     else if(pid == 0){
-        closeWriteEnd(ff);
-        closeReadEnd(fp);
+        close(ff[1]); close(fp[0]);
 
         dup2(ff[0], 0);
         dup2(fp[1], 1);
 
-        closeReadEnd(ff); closeWriteEnd(fp);
+        close(ff[0]); close(fp[1]);
 
         execlp("bash", "bash", "scripts/script.sh", c, NULL);
         perror("Error executing script\n");
         exit(1);
     }
 
-    // Procesul parinte
-    closeReadEnd(ff); closeWriteEnd(ff); closeWriteEnd(fp);
+    close(ff[0]); close(ff[1]); close(fp[1]);
 
     char value[10];
     if (read(fp[0], &value, 10) < 0){
         perror("Error reading from pipe");
         exit(-1);
     }
-    closeReadEnd(fp);
+    close(fp[0]);
 
-    return strtol(value, NULL, 10);
+    return strtol(value, NULL, 10); // Return number of correct sentences in current file
 }
 
 void linkHandler(char *path, char *outputPath){
     pid_t pid;
-    int exit_value = 0;
+    int numberOfLines = 0;
 
     if((pid = fork()) < 0){
         perror("Error\n");
         exit(1);
     }
     else if(pid == 0){
-        exit_value = getLinkStatistics(path, outputPath);
-        exit(exit_value);
+        numberOfLines = getLinkStatistics(path, outputPath);
+        exit(numberOfLines);
     }
 }
 
 void directoryHandler(char *path, char *outputPath){
     pid_t pid;
-    int exit_value = 0;
+    int numberOfLines = 0;
 
     if((pid = fork()) < 0){
         perror("Error\n");
         exit(1);
     }
     else if(pid == 0){
-        exit_value = getDirectoryStatistics(path, outputPath);
-        exit(exit_value);
+        numberOfLines = getDirectoryStatistics(path, outputPath);
+        exit(numberOfLines);
     }
 }
 
@@ -187,33 +167,30 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
 
     struct dirent *directoryContent;
     DIR *directory = openDirectory(inputDirectory);
-    int numOfCorrectSentences = 0;
-    int numOfCreatedProcesses = 0;
+    int numOfCorrectSentences = 0, numOfCreatedProcesses = 0;
+    char path[255], outputPath[255];
 
     readdir(directory); readdir(directory); // Skip . and ..
 
     while((directoryContent = readdir(directory)) != NULL){
-        char path[255], outputPath[255];
-        sprintf(outputPath, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt"); // Construct output path
+        sprintf(outputPath, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt"); // Construct output file path
         sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name); // Construct current file path
 
-        // If it is BMP file create 2 separate processes and exit with code 10 (num lines)
         if(isBMPFile(path)){
-            numOfCreatedProcesses += 2;
+            numOfCreatedProcesses += 2; // In case of bmp file we create 2 processes
             bmpHandler(path, outputPath);
         }
         else if(isFile(path)){
-            numOfCreatedProcesses += 2;
-            numOfCorrectSentences += fileHandler(path, outputPath, c);
+            numOfCreatedProcesses += 2; // In case of other regular files we create 2 processes
+            numOfCorrectSentences += fileHandler(path, outputPath, c); // We add the number of correct sentences from current file
         }
-        // Else for other files create a single process
         else if(isLink(path)){
-            numOfCreatedProcesses += 1;
+            numOfCreatedProcesses += 1; // In case of link we create 1 process
             linkHandler(path, outputPath);
         }
 
         else if(isDirectory(path)){
-            numOfCreatedProcesses += 1;
+            numOfCreatedProcesses += 1; // In case of directory we create 1 process
             directoryHandler(path, outputPath);
         }    
     }

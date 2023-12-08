@@ -34,7 +34,7 @@ int openFile(char *filePath){
 
 void closeFile(int fileDescriptor){
     if(close(fileDescriptor)){
-        perror("Eroare inchidere fisier");
+        perror("Error while closing file");
         exit(-1);
     }
 }
@@ -51,7 +51,7 @@ struct stat getFileStat(char *path){
     struct stat fileStat;
 
     if(lstat(path, &fileStat)){
-        perror("Error fetching file stat2");
+        perror("Error fetching file stat");
         exit(-1);
     }
 
@@ -107,13 +107,12 @@ char *getOtherRights(struct stat fileStat){
 
 void writeFileStatistics(fileData data, char *outputPath, int isImage){
     char buffer[BUFFER_SIZE];
-    int outputFile = createFile(outputPath);
+    int outputFile = createFile(outputPath); // Create statistics file
 
     sprintf(buffer, "nume fisier: %s\n", data.name);
     write(outputFile, buffer, strlen(buffer));
 
-    // Image height and width is displayed only for bmp images
-    if(isImage){
+    if(isImage){// Image height and width is displayed only for bmp images
         sprintf(buffer, "inaltime: %d\n"
                          "latime: %d\n", 
                          data.height, data.width);
@@ -128,15 +127,12 @@ void writeFileStatistics(fileData data, char *outputPath, int isImage){
                     "drepturi de accces grup: %s\n"
                     "drepturi de accces altii: %s\n",
         data.size, data.links, data.uid, data.date, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
-
     write(outputFile, buffer, strlen(buffer));
+
     closeFile(outputFile);
 }
 
-
-
 int getFileStatistics(char *imagePath, char *outputPath, int isImage){
-
     struct stat fileStat = getFileStat(imagePath);
     fileData data;
     int image = openFile(imagePath);
@@ -145,8 +141,7 @@ int getFileStatistics(char *imagePath, char *outputPath, int isImage){
     
     data.size = fileStat.st_size;
 
-    // if it is an image we set height and width
-    if(isImage){
+    if(isImage){ // If it is an image we also need to get height and width
         data.height = getImageHeight(image);
         data.width = getImageWidth(image);
     }
@@ -154,9 +149,7 @@ int getFileStatistics(char *imagePath, char *outputPath, int isImage){
     data.links = fileStat.st_nlink;
 
     strcpy(data.rights.userRights, getUserRights(fileStat));
-
     strcpy(data.rights.groupRights, getGroupRights(fileStat));
-
     strcpy(data.rights.othersRights, getOtherRights(fileStat));
 
     data.uid = fileStat.st_uid;
@@ -167,6 +160,6 @@ int getFileStatistics(char *imagePath, char *outputPath, int isImage){
 
     closeFile(image);
 
-    return (8 + 2*isImage);
+    return (8 + 2*isImage); // If it is an image we write 10 lines, otherwise 8
 }
 

@@ -11,24 +11,18 @@
 #define BUFFER_SIZE 4096
 
 int endsWithBMP(char *name){
-    char extension[5];
     int lenght = strlen(name);
 
     // If length is smaller than 4 it can't be a valid bmp file (min 4 chars .bmp)
     if(lenght < 4)
         return 0;
-
-    // We extract last 4 characters
-    for(int i = 0 ; i < 4; ++i)
-        extension[i] = name[lenght - 4 + i];
-    extension[4] = '\0';
-
-    return !strcmp(extension, ".bmp");
+    //  Check if last 4 chars are .bmp   
+    return strncmp(name + lenght - 4, ".bmp", 4) == 0;
 }
 
 int isBMPFile(char *filePath){
     struct stat fileStat = getFileStat(filePath);
-
+    // To be a valid bmp file it must be a regular file and it must end with .bmp
     if(S_ISREG(fileStat.st_mode) && endsWithBMP(filePath))
         return 1;
 
@@ -64,15 +58,16 @@ int getImageWidth(int imageDescriptor){
 void modifyColorTable(int imageDescriptor, int bitsCount){
     int n, red, green, blue, new_value, count = 0;
     char buffer[4];
+    // Move our cursor at the begining of ColorTable
     lseek(imageDescriptor, 54, SEEK_SET);
     // Color table contains 2^bitsCount entries
     while(count < pow(2,bitsCount) && (n = read(imageDescriptor, buffer, 4)) > 0){
         lseek(imageDescriptor, -n, SEEK_CUR); // Move cursor back so we can overwrite RGB values
         
-        count += 1;
-        red = buffer[0]; green = buffer[1]; blue = buffer[2];
+        count += 1; // Count how many entries we have read
+        red = buffer[0]; green = buffer[1]; blue = buffer[2]; // Get RGB values
 
-        new_value = red * .299f + green * .587f + blue * .144f;
+        new_value = red * .299f + green * .587f + blue * .144f; // Calculate new value
 
         buffer[0] = buffer[1] = buffer[2] = new_value;
         
@@ -103,11 +98,9 @@ void modifyRasterData(int imageDescriptor, int dataOffset){
 }
 
 void transformToGrayscale(char *imagePath){
-
     int imageDescriptor, dataOffset, bitsCount;
 
     imageDescriptor = openFile(imagePath);
-
     // Bytes 10-13 represents the offset where the pixels start
     lseek(imageDescriptor, 10, SEEK_SET);
 
@@ -115,14 +108,17 @@ void transformToGrayscale(char *imagePath){
         perror("Failed to get dataOffset");
         exit(-1);
     }
-
+    // Bytes 28-29 represents the number of bits per pixel
     lseek(imageDescriptor, 28, SEEK_SET);
 
     if(read(imageDescriptor, &bitsCount, 2) != 2){
         perror("Failed to get bitsCount");
         exit(-1);
     }
-
+    /* When dealing with bmp files we have 2 cases:
+        1. If bitsCount <= 8 we have a color table and we need to modify it
+        2. If bitsCount > 8 we don't have a color table and we need to modify raster data
+    */
     if(bitsCount <= 8)
         modifyColorTable(imageDescriptor, bitsCount);
     else

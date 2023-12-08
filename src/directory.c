@@ -9,22 +9,6 @@
 
 #define BUFFER_SIZE 1024
 
-int directoryExists(char *path){
-    struct stat fileStat;
-
-    if(lstat(path, &fileStat))
-        return 0;
-
-    return S_ISDIR(fileStat.st_mode);
-}
-
-void createDirectory(char *path){
-    if(mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)){
-        perror("Error creating directory");
-        exit(-1);
-    }
-}
-
 DIR *openDirectory(char *path){
     DIR *directory;
 
@@ -38,7 +22,7 @@ DIR *openDirectory(char *path){
 
 void closeDirectory(DIR *directory){
     if(closedir(directory)){
-        perror("Error while closing directory");
+        perror("Error while closing directory!");
         exit(-1);
     }
 }
@@ -47,7 +31,7 @@ int isDirectory(char *path){
     struct stat fileStat;
 
     if(lstat(path, &fileStat)){
-        perror("Error fetching file stat3");
+        perror("Error opening directory");
         exit(-1);
     }
 
@@ -64,8 +48,8 @@ void printDirectoryStatistics(fileData data, char *outputPath){
                 "drepturi de access grup: %s\n"
                 "drepturi de access altii: %s\n",
         data.name, data.uid, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
-
     write(outputFile, string, strlen(string));
+
     closeFile(outputFile);
 }
 
@@ -80,12 +64,10 @@ int getDirectoryStatistics(char *directoryPath, char *outputPath){
     data.uid = fileStat.st_uid;
 
     strcpy(data.rights.userRights, getUserRights(fileStat));
-
     strcpy(data.rights.groupRights, getGroupRights(fileStat));
-
     strcpy(data.rights.othersRights, getOtherRights(fileStat));
 
     printDirectoryStatistics(data, outputPath);
 
-    return 5;
+    return 5; // Number of lines printed
 }

@@ -9,16 +9,15 @@
 #define BUFFER_SIZE 1024
 
 int isLink(char *path){
-
     struct stat targetStat, fileStat;
+
     fileStat = getFileStat(path);
-    
     // targetStat cresponds to metadata about the ACTUAL file
     if(stat(path, &targetStat)){
         perror("Error fetching file stat1");
         exit(-1);
     }
-
+    // We check if the file is a link and if the target is a regular file
     if(S_ISLNK(fileStat.st_mode) && S_ISREG(targetStat.st_mode))
         return 1;
     return 0;
@@ -57,14 +56,12 @@ int getLinkStatistics(char *linkPath, char *outputPath){
     data.targetSize = targetStat.st_size;
 
     strcpy(data.rights.userRights, getUserRights(linkStat));
-
     strcpy(data.rights.groupRights, getGroupRights(linkStat));
-
     strcpy(data.rights.othersRights, getOtherRights(linkStat));
 
     printLinkStatistics(data, outputPath);
 
-    return 6;
+    return 6; // 6 is the number of lines printed in the file
 }
 
 
