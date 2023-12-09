@@ -1,10 +1,10 @@
-nume fisier: input/imagine_3.bmp
+nume fisier: imagine_3.bmp
 inaltime: 256
 latime: 256
 dimensiune: 196666 octeti
-numar legaturi: 1
 identificatorul utilizatorului: 501
-timpul ultimei modificari: 07.12.2023
+timpul ultimei modificari: 09.12.2023
+contorul de legaturi: 1
 drepturi de accces user: RW-
 drepturi de accces grup: R--
 drepturi de accces altii: R--

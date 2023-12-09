@@ -31,7 +31,7 @@ int isDirectory(char *path){
     struct stat fileStat;
 
     if(lstat(path, &fileStat)){
-        perror("Error opening directory");
+        perror("Error fetching directory stat");
         exit(-1);
     }
 
@@ -59,7 +59,7 @@ int getDirectoryStatistics(char *directoryPath, char *outputPath){
 
     fileStat = getFileStat(directoryPath);
 
-    strcpy(data.name, directoryPath);
+    strcpy(data.name, getFileNameFromPath(directoryPath));
 
     data.uid = fileStat.st_uid;
 

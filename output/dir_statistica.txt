@@ -1,4 +1,4 @@
-nume director: input/dir
+nume director: dir
 identificatorul utilizatorului: 501
 drepturi de access user: RWX
 drepturi de access grup: R-X

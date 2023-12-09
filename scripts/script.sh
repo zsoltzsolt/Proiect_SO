@@ -13,7 +13,7 @@ else
         if echo "$line" | grep -e "^[A-Z][A-Za-z0-9 ,\.\!\?]*" | # Incepe cu litera mare, contine doar litere mari, mici, cifre, spatii, virgula, punct semnul exclamarii si semnul intrebarii
         grep -e "[\!\?\.]$" |  # Se termina cu semnul exclamarii, intrebarii sau punct
         grep -ve ",[ ]*si" |  # Nu contine virgula inainte de si
-        grep -e "$1" > /dev/null # Contine caracterul dac ca argument
+        grep -qe "$1" # Contine caracterul dat ca argument, folosim q pentru a nu afisa liniile corecte la iesirea standard
         then
             ((++count))
         fi

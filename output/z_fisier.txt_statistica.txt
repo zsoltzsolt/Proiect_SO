@@ -1,8 +1,8 @@
-nume fisier: input/z_fisier.txt
-dimensiune: 408 octeti
-numar legaturi: 1
+nume fisier: z_fisier.txt
+dimensiune: 423 octeti
 identificatorul utilizatorului: 501
-timpul ultimei modificari: 05.12.2023
+timpul ultimei modificari: 09.12.2023
+contorul de legaturi: 1
 drepturi de accces user: RW-
 drepturi de accces grup: R--
 drepturi de accces altii: R--

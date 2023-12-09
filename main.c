@@ -55,7 +55,7 @@ void bmpHandler(char *path, char *outputPath){
             exit(1);
     }
     else if(pid == 0){
-        transformToGrayscale(path);
+        transformToGrayscale(path); // Transform image to grayscale
         exit(0); // Exit with code 0 (success)
     }
 
@@ -64,15 +64,15 @@ void bmpHandler(char *path, char *outputPath){
         exit(1);
     }
     else if(pid == 0){
-        int exit_value = getFileStatistics(path, outputPath, 1);
-        exit(exit_value);  // 
+        int numberOfLines = getFileStatistics(path, outputPath, 1); // Write statistics in file (1 means bmp file, 0 means other file)
+        exit(numberOfLines);  // exit with number of lines written in statistics file
     }
 }
 
 int fileHandler(char *path, char *outputPath, char *c){
     pid_t pid;
     int ff[2], fp[2];
-    // We have 2 pipes: ff - for file content, fp - for number of correct sentences
+    // We have 2 pipes: ff - for sending file content, fp - for sending number of correct sentences
     createPipe(ff);
     createPipe(fp);
     // First child will create statistics file and write the content of the initial file in pipe ff
@@ -87,16 +87,16 @@ int fileHandler(char *path, char *outputPath, char *c){
         char numberOfLinesString[10];
         sprintf(numberOfLinesString, "%d", numberOfLines); // Convert number of lines to string to be passed as argument
 
-        dup2(ff[1], 1);
+        dup2(ff[1], 1); // Redirect stdout to pipe ff
         close(ff[1]);
 
-        execlp("bash", "bash","scripts/lines.sh", path, numberOfLinesString, NULL);
+        execlp("bash", "bash", "scripts/lines.sh", path, numberOfLinesString, NULL); // Script to write file content in pipe ff and also exit this process with number of lines written
         perror("Error executing cat\n");
         exit(1);
     }
 
-    // Acest proces va prii de la celalt fiu prin pipe continutul fisierului si va numara propozitiile corecte
-    // Numarul de propozitii corecte va fi scris in pipe-ul fp - transmis parintelui
+    // Second child will get the content of the file from pipe ff and will count the number of correct sentences
+    // It will also write the number of correct sentences in pipe fp
     if((pid = fork()) < 0){
         perror("Error\n");
         exit(1);
@@ -104,12 +104,12 @@ int fileHandler(char *path, char *outputPath, char *c){
     else if(pid == 0){
         close(ff[1]); close(fp[0]);
 
-        dup2(ff[0], 0);
-        dup2(fp[1], 1);
+        dup2(ff[0], 0); // Redirect stdin to pipe ff
+        dup2(fp[1], 1); // Redirect stdout to pipe fp
 
         close(ff[0]); close(fp[1]);
 
-        execlp("bash", "bash", "scripts/script.sh", c, NULL);
+        execlp("bash", "bash", "scripts/script.sh", c, NULL);// Script to count correct sentences
         perror("Error executing script\n");
         exit(1);
     }
@@ -117,13 +117,13 @@ int fileHandler(char *path, char *outputPath, char *c){
     close(ff[0]); close(ff[1]); close(fp[1]);
 
     char value[10];
-    if (read(fp[0], &value, 10) < 0){
+    if (read(fp[0], &value, 10) < 0){   // Read number of correct sentences from pipe fp
         perror("Error reading from pipe");
         exit(-1);
     }
     close(fp[0]);
 
-    return strtol(value, NULL, 10); // Return number of correct sentences in current file
+    return strtol(value, NULL, 10); // Return number of correct sentences in current file, converted from string to int
 }
 
 void linkHandler(char *path, char *outputPath){
@@ -135,8 +135,8 @@ void linkHandler(char *path, char *outputPath){
         exit(1);
     }
     else if(pid == 0){
-        numberOfLines = getLinkStatistics(path, outputPath);
-        exit(numberOfLines);
+        numberOfLines = getLinkStatistics(path, outputPath); // Write link statistics in file
+        exit(numberOfLines); // Exit with number of lines written in statistics file
     }
 }
 
@@ -149,8 +149,8 @@ void directoryHandler(char *path, char *outputPath){
         exit(1);
     }
     else if(pid == 0){
-        numberOfLines = getDirectoryStatistics(path, outputPath);
-        exit(numberOfLines);
+        numberOfLines = getDirectoryStatistics(path, outputPath); // Write directory statistics in file
+        exit(numberOfLines); // Exit with number of lines written in statistics file
     }
 }
 
@@ -173,7 +173,7 @@ void scanDirectory(char *inputDirectory, char *outputDirectory, char *c){
     readdir(directory); readdir(directory); // Skip . and ..
 
     while((directoryContent = readdir(directory)) != NULL){
-        sprintf(outputPath, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt"); // Construct output file path
+        sprintf(outputPath, "%s/%s_%s",outputDirectory, directoryContent->d_name, "statistica.txt"); // Construct statistics output file path
         sprintf(path, "%s/%s", inputDirectory, directoryContent->d_name); // Construct current file path
 
         if(isBMPFile(path)){

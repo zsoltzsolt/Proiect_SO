@@ -42,9 +42,18 @@ void closeFile(int fileDescriptor){
 int isFile(char *filePath){
     struct stat fileStat;
 
-    lstat(filePath, &fileStat);
+    fileStat = getFileStat(filePath);
 
     return S_ISREG(fileStat.st_mode);
+}
+
+char *getFileNameFromPath(char *filePath){
+    char *fileName = strrchr(filePath, '/'); // Find the position of the last '/' character
+
+    if(fileName == NULL)    // If there is no '/' character in the path it is the actual file name
+        return filePath;
+
+    return fileName + 1; // Return pointer to the first character after '/'
 }
 
 struct stat getFileStat(char *path){
@@ -120,13 +129,13 @@ void writeFileStatistics(fileData data, char *outputPath, int isImage){
     }
 
     sprintf(buffer, "dimensiune: %d octeti\n"
-                    "numar legaturi: %d\n"
                     "identificatorul utilizatorului: %d\n"
                     "timpul ultimei modificari: %s\n"
+                    "contorul de legaturi: %d\n"
                     "drepturi de accces user: %s\n"
                     "drepturi de accces grup: %s\n"
                     "drepturi de accces altii: %s\n",
-        data.size, data.links, data.uid, data.date, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
+        data.size, data.uid, data.date, data.links, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
     write(outputFile, buffer, strlen(buffer));
 
     closeFile(outputFile);
@@ -137,7 +146,7 @@ int getFileStatistics(char *imagePath, char *outputPath, int isImage){
     fileData data;
     int image = openFile(imagePath);
 
-    strcpy(data.name, imagePath);
+    strcpy(data.name, getFileNameFromPath(imagePath));
     
     data.size = fileStat.st_size;
 

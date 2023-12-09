@@ -28,8 +28,8 @@ void printLinkStatistics(fileData data, char *outputPath){
     int outputFile = createFile(outputPath);
 
     sprintf(buffer, "nume legatura: %s\n"
-                "dimensiune legatura: %d\n"
-                "dimensiune fisier: %d\n"
+                "dimensiune legatura: %d octeti\n"
+                "dimensiune fisier: %d octeti\n"
                 "drepturi de accces user: %s\n"
                 "drepturi de accces grup: %s\n"
                 "drepturi de accces altii: %s\n",
@@ -49,7 +49,7 @@ int getLinkStatistics(char *linkPath, char *outputPath){
         exit(-1);
     }
 
-    strcpy(data.name, linkPath);
+    strcpy(data.name, getFileNameFromPath(linkPath));
 
     data.size = linkStat.st_size;
 

@@ -7,12 +7,12 @@
 #include "../include/file.h"
 #include<math.h>
 #include <stdio.h>
+#include <stdint.h>
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 1200
 
 int endsWithBMP(char *name){
     int lenght = strlen(name);
-
     // If length is smaller than 4 it can't be a valid bmp file (min 4 chars .bmp)
     if(lenght < 4)
         return 0;
@@ -25,7 +25,6 @@ int isBMPFile(char *filePath){
     // To be a valid bmp file it must be a regular file and it must end with .bmp
     if(S_ISREG(fileStat.st_mode) && endsWithBMP(filePath))
         return 1;
-
     return 0;
 }
 
@@ -55,7 +54,7 @@ int getImageWidth(int imageDescriptor){
     return width;
 }
 
-void modifyColorTable(int imageDescriptor, int bitsCount){
+void modifyColorTable(int imageDescriptor, uint16_t bitsCount){
     int n, red, green, blue, new_value, count = 0;
     char buffer[4];
     // Move our cursor at the begining of ColorTable
@@ -98,7 +97,8 @@ void modifyRasterData(int imageDescriptor, int dataOffset){
 }
 
 void transformToGrayscale(char *imagePath){
-    int imageDescriptor, dataOffset, bitsCount;
+    int imageDescriptor, dataOffset;
+    uint16_t bitsCount; // I use uint16_t because bitsCount is 2 bytes long
 
     imageDescriptor = openFile(imagePath);
     // Bytes 10-13 represents the offset where the pixels start

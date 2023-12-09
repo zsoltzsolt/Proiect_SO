@@ -29,6 +29,8 @@ void closeFile(int fileDescriptor);
 
 int isFile(char *filePath);
 
+char *getFileNameFromPath(char *filePath);
+
 char *getModificationDate(struct stat fileStat);
 
 char *getUserRights(struct stat fileStat);

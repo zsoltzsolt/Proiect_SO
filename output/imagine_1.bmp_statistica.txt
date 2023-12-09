@@ -1,10 +1,10 @@
-nume fisier: input/imagine_1.bmp
+nume fisier: imagine_1.bmp
 inaltime: 467
 latime: 467
 dimensiune: 219634 octeti
-numar legaturi: 1
 identificatorul utilizatorului: 501
-timpul ultimei modificari: 07.12.2023
+timpul ultimei modificari: 09.12.2023
+contorul de legaturi: 1
 drepturi de accces user: RW-
 drepturi de accces grup: R--
 drepturi de accces altii: R--
