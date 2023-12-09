@@ -7,9 +7,9 @@
 #include "../include/directory.h"
 #include "../include/file.h"
 
+#define BUFFER_SIZE 1024
 
 DIR *openDirectory(char *path){
-    
     DIR *directory;
 
     if((directory = opendir(path)) == NULL){
@@ -18,71 +18,56 @@ DIR *openDirectory(char *path){
     }
 
     return directory;
-
 }
 
 void closeDirectory(DIR *directory){
-
     if(closedir(directory)){
-        perror("Error while closing directory");
+        perror("Error while closing directory!");
         exit(-1);
     }
-
 }
 
 int isDirectory(char *path){
-
     struct stat fileStat;
 
     if(lstat(path, &fileStat)){
-        perror("Error fetching file stat3");
+        perror("Error fetching directory stat");
         exit(-1);
     }
 
     return S_ISDIR(fileStat.st_mode);
-
 }
 
-void printDirectoryStatistics(directoryData data, int outputFile){
+void printDirectoryStatistics(fileData data, char *outputPath){
+    char string[BUFFER_SIZE];
+    int outputFile = createFile(outputPath);
 
-    char string[255];
-
-    sprintf(string, "nume director: %s\n", data.directoryName);
+    sprintf(string, "nume director: %s\n"
+                "identificatorul utilizatorului: %d\n"
+                "drepturi de access user: %s\n"
+                "drepturi de access grup: %s\n"
+                "drepturi de access altii: %s\n",
+        data.name, data.uid, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
     write(outputFile, string, strlen(string));
 
-    sprintf(string, "identificatorul utilizatorului: %d\n", data.uid);
-    write(outputFile, string, strlen(string));
-
-    sprintf(string, "drepturi de access user: %s\n", data.rights.userRights);
-    write(outputFile, string, strlen(string));
-
-    sprintf(string, "drepturi de access grup: %s\n", data.rights.groupRights);
-    write(outputFile, string, strlen(string));
-
-    sprintf(string, "drepturi de access altii: %s\n", data.rights.othersRights);
-    write(outputFile, string, strlen(string));
-
-
+    closeFile(outputFile);
 }
 
-void getDirectoryStatistics(char *directoryPath, int outputFile){
-
+int getDirectoryStatistics(char *directoryPath, char *outputPath){
     struct stat fileStat;
-    directoryData data;
+    fileData data;
 
     fileStat = getFileStat(directoryPath);
 
-    strcpy(data.directoryName, directoryPath);
+    strcpy(data.name, getFileNameFromPath(directoryPath));
 
     data.uid = fileStat.st_uid;
 
     strcpy(data.rights.userRights, getUserRights(fileStat));
-
     strcpy(data.rights.groupRights, getGroupRights(fileStat));
-
     strcpy(data.rights.othersRights, getOtherRights(fileStat));
 
-    printDirectoryStatistics(data, outputFile);
+    printDirectoryStatistics(data, outputPath);
 
-
+    return 5; // Number of lines printed
 }

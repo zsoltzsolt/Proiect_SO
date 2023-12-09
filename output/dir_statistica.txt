@@ -1,0 +1,5 @@
+nume director: dir
+identificatorul utilizatorului: 501
+drepturi de access user: RWX
+drepturi de access grup: R-X
+drepturi de access altii: R-X

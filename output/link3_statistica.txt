@@ -1,0 +1,6 @@
+nume legatura: link3
+dimensiune legatura: 13 octeti
+dimensiune fisier: 219634 octeti
+drepturi de accces user: RWX
+drepturi de accces grup: R-X
+drepturi de accces altii: R-X

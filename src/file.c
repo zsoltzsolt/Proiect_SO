@@ -8,8 +8,9 @@
 #include "../include/file.h"
 #include "../include/bmp.h"
 
-int createFile(char *filePath){
+#define BUFFER_SIZE 1024
 
+int createFile(char *filePath){
     int file = 0;
 
     if((file = open(filePath, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) < 0){
@@ -18,75 +19,67 @@ int createFile(char *filePath){
     }
 
     return file;
-
 }
 
 int openFile(char *filePath){
-
     int file = 0;
 
     if((file = open(filePath, O_RDWR)) < 0){
-        perror("Error while opening file");
+        printf("Error while opening file %s\n ", filePath);
         exit(-1);
     }
 
     return file;
-
 }
 
 void closeFile(int fileDescriptor){
-
     if(close(fileDescriptor)){
-        perror("Eroare inchidere fisier");
+        perror("Error while closing file");
         exit(-1);
     }
-
 }
 
 int isFile(char *filePath){
-
     struct stat fileStat;
 
-    lstat(filePath, &fileStat);
+    fileStat = getFileStat(filePath);
 
-    if(S_ISREG(fileStat.st_mode))
-        return 1;
+    return S_ISREG(fileStat.st_mode);
+}
 
-    return 0;
+char *getFileNameFromPath(char *filePath){
+    char *fileName = strrchr(filePath, '/'); // Find the position of the last '/' character
 
+    if(fileName == NULL)    // If there is no '/' character in the path it is the actual file name
+        return filePath;
+
+    return fileName + 1; // Return pointer to the first character after '/'
 }
 
 struct stat getFileStat(char *path){
-
     struct stat fileStat;
 
     if(lstat(path, &fileStat)){
-        perror("Error fetching file stat2");
+        perror("Error fetching file stat");
         exit(-1);
     }
 
     return fileStat;
-
 }
 
 
 char *getModificationDate(struct stat fileStat){
-
     static char modificationDate[256];
-
     struct tm *timeNow = localtime(&fileStat.st_mtimespec.tv_sec);
 
     // We convert modification date to dd/mm/yyyy format
     strftime(modificationDate, 10, "%d.%m.%Y", timeNow);
 
     return modificationDate;
-
 }
 
 char *getUserRights(struct stat fileStat){
-
     static char rights[4];
-
     int mode = fileStat.st_mode;
 
     rights[0] = (S_IRUSR & mode) ? 'R' : '-';
@@ -95,13 +88,10 @@ char *getUserRights(struct stat fileStat){
     rights[3] = '\0';
 
     return rights;
-
 }
 
 char *getGroupRights(struct stat fileStat){
-
     static char rights[4];
-
     int mode = fileStat.st_mode;
 
     rights[0] = (S_IRGRP & mode) ? 'R' : '-';
@@ -110,13 +100,10 @@ char *getGroupRights(struct stat fileStat){
     rights[3] = '\0';
 
     return rights;
-
 }
 
 char *getOtherRights(struct stat fileStat){
-
     static char rights[4];
-
     int mode = fileStat.st_mode;
 
     rights[0] = (S_IROTH & mode) ? 'R' : '-';
@@ -125,83 +112,63 @@ char *getOtherRights(struct stat fileStat){
     rights[3] = '\0';
 
     return rights;
-
 }
 
+void writeFileStatistics(fileData data, char *outputPath, int isImage){
+    char buffer[BUFFER_SIZE];
+    int outputFile = createFile(outputPath); // Create statistics file
 
-
-void writeFileStatistics(imageData data, int outputFile, int isImage){
-    
-    char buffer[255];
-
-    sprintf(buffer, "nume fisier: %s\n", data.imageName);
+    sprintf(buffer, "nume fisier: %s\n", data.name);
     write(outputFile, buffer, strlen(buffer));
 
-    // Image height and width is displayed only for bmp images
-    if(isImage){
-        sprintf(buffer, "inaltime: %d\n", data.height);
-        write(outputFile, buffer, strlen(buffer));
-
-        sprintf(buffer, "latime: %d\n", data.width);
+    if(isImage){// Image height and width is displayed only for bmp images
+        sprintf(buffer, "inaltime: %d\n"
+                         "latime: %d\n", 
+                         data.height, data.width);
         write(outputFile, buffer, strlen(buffer));
     }
 
-    sprintf(buffer, "dimensiune: %d octeti\n", data.size);
+    sprintf(buffer, "dimensiune: %d octeti\n"
+                    "identificatorul utilizatorului: %d\n"
+                    "timpul ultimei modificari: %s\n"
+                    "contorul de legaturi: %d\n"
+                    "drepturi de accces user: %s\n"
+                    "drepturi de accces grup: %s\n"
+                    "drepturi de accces altii: %s\n",
+        data.size, data.uid, data.date, data.links, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
     write(outputFile, buffer, strlen(buffer));
 
-    sprintf(buffer, "numar legaturi: %d\n", data.links);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "identificatorul utilizatorului: %d\n", data.uid);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "timpul ultimei modificari: %s\n", data.date);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "drepturi de accces user: %s\n", data.imageRights.userRights);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "drepturi de accces grup: %s\n", data.imageRights.groupRights);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "drepturi de accces altii: %s\n", data.imageRights.othersRights);
-    write(outputFile, buffer, strlen(buffer));
-
+    closeFile(outputFile);
 }
 
-
-
-void getFileStatistics(char *imagePath, int outputFile, int isImage){
-
+int getFileStatistics(char *imagePath, char *outputPath, int isImage){
     struct stat fileStat = getFileStat(imagePath);
-    imageData data;
+    fileData data;
     int image = openFile(imagePath);
 
-    strcpy(data.imageName, imagePath);
+    strcpy(data.name, getFileNameFromPath(imagePath));
     
     data.size = fileStat.st_size;
 
-    // if it is an image we set height and width
-    if(isImage){
+    if(isImage){ // If it is an image we also need to get height and width
         data.height = getImageHeight(image);
         data.width = getImageWidth(image);
     }
 
     data.links = fileStat.st_nlink;
 
-    strcpy(data.imageRights.userRights, getUserRights(fileStat));
-
-    strcpy(data.imageRights.groupRights, getGroupRights(fileStat));
-
-    strcpy(data.imageRights.othersRights, getOtherRights(fileStat));
+    strcpy(data.rights.userRights, getUserRights(fileStat));
+    strcpy(data.rights.groupRights, getGroupRights(fileStat));
+    strcpy(data.rights.othersRights, getOtherRights(fileStat));
 
     data.uid = fileStat.st_uid;
 
     data.date = getModificationDate(fileStat);
 
-    writeFileStatistics(data, outputFile, isImage);
+    writeFileStatistics(data, outputPath, isImage);
 
     closeFile(image);
 
+    return (8 + 2*isImage); // If it is an image we write 10 lines, otherwise 8
 }
 

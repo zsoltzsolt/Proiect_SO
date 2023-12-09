@@ -1,0 +1,6 @@
+nume legatura: link2
+dimensiune legatura: 10 octeti
+dimensiune fisier: 18 octeti
+drepturi de accces user: RWX
+drepturi de accces grup: R-X
+drepturi de accces altii: R-X

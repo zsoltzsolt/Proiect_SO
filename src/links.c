@@ -6,76 +6,62 @@
 #include "../include/links.h"
 #include "../include/file.h"
 
-int isLink(char *path){
+#define BUFFER_SIZE 1024
 
-    struct stat fileStat = getFileStat(path);
-    struct stat targetStat;
-    
+int isLink(char *path){
+    struct stat targetStat, fileStat;
+
+    fileStat = getFileStat(path);
     // targetStat cresponds to metadata about the ACTUAL file
     if(stat(path, &targetStat)){
         perror("Error fetching file stat1");
         exit(-1);
     }
-
+    // We check if the file is a link and if the target is a regular file
     if(S_ISLNK(fileStat.st_mode) && S_ISREG(targetStat.st_mode))
         return 1;
-
     return 0;
 }
 
-void printLinkStatistics(linkData data, int outputFile){
-    
-    char buffer[255];
+void printLinkStatistics(fileData data, char *outputPath){
+    char buffer[BUFFER_SIZE];
+    int outputFile = createFile(outputPath);
 
-    sprintf(buffer, "nume legatura: %s\n", data.linkName);
+    sprintf(buffer, "nume legatura: %s\n"
+                "dimensiune legatura: %d octeti\n"
+                "dimensiune fisier: %d octeti\n"
+                "drepturi de accces user: %s\n"
+                "drepturi de accces grup: %s\n"
+                "drepturi de accces altii: %s\n",
+        data.name, data.size, data.targetSize, data.rights.userRights, data.rights.groupRights, data.rights.othersRights);
+
     write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "dimensiune legatura: %d\n", data.linkSize);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "dimensiune fisier: %d\n", data.targetSize);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "drepturi de accces user: %s\n", data.rights.userRights);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "drepturi de accces grup: %s\n", data.rights.groupRights);
-    write(outputFile, buffer, strlen(buffer));
-
-    sprintf(buffer, "drepturi de accces altii: %s\n", data.rights.othersRights);
-    write(outputFile, buffer, strlen(buffer));
-
 }
 
-void getLinkStatistics(char *linkPath, int outputFile){
-
-    struct stat linkStat;
-    struct stat targetStat;
-    linkData data;
-
+int getLinkStatistics(char *linkPath, char *outputPath){
+    struct stat linkStat, targetStat;
+    fileData data;
     // linkStat coresponds to metadata about LINK
     linkStat = getFileStat(linkPath);
-    
     // targetStat cresponds to metadata about the ACTUAL file
     if(stat(linkPath, &targetStat)){
         perror("Error fetching file stat1");
         exit(-1);
     }
 
-    strcpy(data.linkName, linkPath);
+    strcpy(data.name, getFileNameFromPath(linkPath));
 
-    data.linkSize = linkStat.st_size;
+    data.size = linkStat.st_size;
 
     data.targetSize = targetStat.st_size;
 
     strcpy(data.rights.userRights, getUserRights(linkStat));
-
     strcpy(data.rights.groupRights, getGroupRights(linkStat));
-
     strcpy(data.rights.othersRights, getOtherRights(linkStat));
 
-    printLinkStatistics(data, outputFile);
+    printLinkStatistics(data, outputPath);
 
+    return 6; // 6 is the number of lines printed in the file
 }
 
 
